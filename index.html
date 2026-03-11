@@ -294,6 +294,12 @@ async function fetchTicker(ticker) {
     updateStatusBar();
     return true;
   }
+  // If preloaded data already exists for this ticker, keep it instead of overwriting with zeros
+  if (etfData[ticker] && etfData[ticker].price > 0) {
+    etfData[ticker].marketState = 'PRELOADED';
+    failedTickers.push(ticker);
+    return true; // Data is still valid from preload
+  }
   etfData[ticker] = {price:0,prevClose:0,change:0,changePct:0,high:0,low:0,volume:0,closes:[],marketState:'FAILED',currency:'USD'};
   failedTickers.push(ticker);
   updateStatusBar();
@@ -322,7 +328,11 @@ async function fetchBatch(tickers, batchSize=3) {
   
   // Now fetch fresh data with small batches to avoid rate limits
   failedTickers = [];
-  loadedCount = 0;
+  // Don't reset loadedCount - preserve preloaded data count
+  // Only count tickers that don't already have valid data
+  const tickersToFetch = tickers.filter(t => !etfData[t] || etfData[t].price <= 0);
+  const alreadyLoaded = tickers.length - tickersToFetch.length;
+  loadedCount = alreadyLoaded;
   for (let i = 0; i < tickers.length; i += batchSize) {
     const batch = tickers.slice(i, i + batchSize);
     await Promise.all(batch.map(t => fetchTicker(t)));
@@ -620,9 +630,11 @@ function renderContent() {
 
 // ========== REFRESH ==========
 async function refreshAll() {
-  loadedCount = 0;
+  // Don't reset loadedCount to 0 - preloaded data is still valid
   const allTickers = getAllUniqueTickers();
   totalToLoad = allTickers.length;
+  // Count how many tickers already have valid data from preload
+  loadedCount = allTickers.filter(t => etfData[t] && etfData[t].price > 0).length;
   updateStatusBar();
 
   await fetchBatch(allTickers, 6);
