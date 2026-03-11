@@ -588,6 +588,12 @@ function switchTab(tabId) {
   renderContent();
 }
 
+function renderAll() {
+  updateStatusBar();
+  renderNavBar();
+  renderContent();
+}
+
 function renderContent() {
   const main = document.getElementById('mainContent');
   const tab = TABS.find(t => t.id === activeTab);
