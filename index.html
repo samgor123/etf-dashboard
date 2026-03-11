@@ -193,11 +193,7 @@ let activeTab = 'overview';
 let refreshTimer = null;
 
 // ========== DATA FETCHING ==========
-// Robust proxy strategy: allorigins.win with aggressive retry + localStorage cache
-const PROXIES = [
-  (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-  (url) => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
-];
+// Direct Yahoo Finance v8 API - query2 with corsDomain parameter allows browser CORS requests
 
 const CACHE_KEY = 'etf_dashboard_cache';
 const CACHE_TS_KEY = 'etf_dashboard_cache_ts';
@@ -220,33 +216,26 @@ function loadFromCache() {
   return null;
 }
 
-function parseYahooResponse(json, isGetEndpoint) {
-  // /get endpoint wraps response in {contents: "..."}
-  let data = json;
-  if (isGetEndpoint && json.contents) {
-    data = typeof json.contents === 'string' ? JSON.parse(json.contents) : json.contents;
-  }
-  return data;
-}
-
 function randomDelay(min, max) {
   return new Promise(r => setTimeout(r, min + Math.random() * (max - min)));
 }
 
 async function fetchTicker(ticker) {
-  const baseUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d`;
-  const MAX_RETRIES = 5;
-  
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    for (let i = 0; i < PROXIES.length; i++) {
+  // Direct Yahoo Finance v8 - query2 with corsDomain supports browser CORS
+  const urls = [
+    `https://query2.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d&corsDomain=finance.yahoo.com`,
+    `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d&corsDomain=finance.yahoo.com`,
+  ];
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    for (const url of urls) {
       try {
-        const url = PROXIES[i](baseUrl);
-        const isGetEndpoint = i === 1;
-        const timeout = 10000 + attempt * 2000; // Increase timeout each retry
-        const resp = await fetch(url, {signal: AbortSignal.timeout(timeout)});
+        const resp = await fetch(url, {
+          signal: AbortSignal.timeout(8000),
+          headers: {'Accept': 'application/json'}
+        });
         if (!resp.ok) continue;
-        const json = await resp.json();
-        const data = parseYahooResponse(json, isGetEndpoint);
+        const data = await resp.json();
         const result = data.chart?.result?.[0];
         if (!result) continue;
         const meta = result.meta;
@@ -256,7 +245,7 @@ async function fetchTicker(ticker) {
         const lows = quotes?.low || [];
         const volumes = quotes?.volume || [];
         const price = meta.regularMarketPrice || closes[closes.length-1] || 0;
-        if (price === 0) continue; // Invalid data, retry
+        if (price === 0) continue;
         const prevClose = meta.chartPreviousClose || meta.previousClose || closes[0] || price;
         const change = price - prevClose;
         const changePct = prevClose ? (change / prevClose) * 100 : 0;
@@ -281,12 +270,10 @@ async function fetchTicker(ticker) {
         continue;
       }
     }
-    // Wait before next retry attempt with jitter
-    if (attempt < MAX_RETRIES - 1) {
-      await randomDelay(1000 + attempt * 500, 2000 + attempt * 1000);
-    }
+    if (attempt === 0) await randomDelay(500, 1500);
   }
-  // All retries failed - try loading from cache for this ticker
+
+  // Fetch failed - try localStorage cache
   const cached = loadFromCache();
   if (cached && cached[ticker] && cached[ticker].price > 0) {
     etfData[ticker] = {...cached[ticker], marketState: 'CACHED'};
@@ -294,12 +281,12 @@ async function fetchTicker(ticker) {
     updateStatusBar();
     return true;
   }
-  // If preloaded data already exists for this ticker, keep it instead of overwriting with zeros
+  // Keep PRELOADED data intact - do NOT overwrite with zeros
   if (etfData[ticker] && etfData[ticker].price > 0) {
-    etfData[ticker].marketState = 'PRELOADED';
-    failedTickers.push(ticker);
-    return true; // Data is still valid from preload
+    // Data still valid from preload, just mark it
+    return true;
   }
+  // Truly no data available
   etfData[ticker] = {price:0,prevClose:0,change:0,changePct:0,high:0,low:0,volume:0,closes:[],marketState:'FAILED',currency:'USD'};
   failedTickers.push(ticker);
   updateStatusBar();
@@ -326,33 +313,25 @@ async function fetchBatch(tickers, batchSize=3) {
     }
   }
   
-  // Now fetch fresh data with small batches to avoid rate limits
+  // Fetch fresh live data - only for tickers not already loaded from preload/cache
   failedTickers = [];
-  // Don't reset loadedCount - preserve preloaded data count
-  // Only count tickers that don't already have valid data
   const tickersToFetch = tickers.filter(t => !etfData[t] || etfData[t].price <= 0);
-  const alreadyLoaded = tickers.length - tickersToFetch.length;
-  loadedCount = alreadyLoaded;
-  for (let i = 0; i < tickers.length; i += batchSize) {
-    const batch = tickers.slice(i, i + batchSize);
-    await Promise.all(batch.map(t => fetchTicker(t)));
-    // Render progressively as data comes in
-    renderAll();
-    if (i + batchSize < tickers.length) {
-      await randomDelay(800, 1500);
-    }
-  }
-  // Retry failed tickers with even smaller batches
-  if (failedTickers.length > 0) {
-    const retries = [...failedTickers];
-    failedTickers = [];
-    for (let i = 0; i < retries.length; i += 2) {
-      const batch = retries.slice(i, i + 2);
+  loadedCount = tickers.length - tickersToFetch.length; // Start count from already-loaded
+  
+  if (tickersToFetch.length > 0) {
+    for (let i = 0; i < tickersToFetch.length; i += batchSize) {
+      const batch = tickersToFetch.slice(i, i + batchSize);
       await Promise.all(batch.map(t => fetchTicker(t)));
       renderAll();
-      await randomDelay(1500, 3000);
+      if (i + batchSize < tickersToFetch.length) {
+        await randomDelay(400, 900);
+      }
     }
+  } else {
+    // All tickers already loaded from preload/cache - just refresh display
+    renderAll();
   }
+  
   // Save successful data to cache
   saveToCache(etfData);
 }
