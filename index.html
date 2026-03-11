@@ -68,6 +68,21 @@ tr:hover{background:rgba(59,130,246,.05)}
 .refresh-btn:hover{background:#2563eb}
 .refresh-btn:active{transform:scale(.97)}
 .footer{text-align:center;padding:24px;color:var(--dim);font-size:0.75rem;border-top:1px solid var(--border);margin-top:24px;line-height:1.6}
+/* Leveraged ETF special styles */
+.card.leveraged{border-color:rgba(245,158,11,.35);background:linear-gradient(135deg,#111827 0%,#1a1500 100%)}
+.card.leveraged:hover{border-color:var(--orange);box-shadow:0 4px 20px rgba(245,158,11,.2)}
+.card.leveraged .ticker-name{color:var(--orange)}
+.card.leveraged .tag{background:rgba(245,158,11,.15);color:var(--orange)}
+.card.bear{border-color:rgba(239,68,68,.35);background:linear-gradient(135deg,#111827 0%,#1a0000 100%)}
+.card.bear:hover{border-color:var(--red);box-shadow:0 4px 20px rgba(239,68,68,.2)}
+.card.bear .ticker-name{color:var(--red)}
+.card.bear .tag{background:rgba(239,68,68,.15);color:var(--red)}
+.leveraged-section-title{font-size:1.1rem;font-weight:700;margin:16px 0 12px;padding-left:8px;border-left:3px solid var(--orange);display:flex;align-items:center;gap:8px}
+.leveraged-section-title .warn{font-size:0.72rem;color:var(--orange);opacity:.8;font-weight:400}
+.nav button.lev-tab{border-color:rgba(245,158,11,.4);color:var(--orange)}
+.nav button.lev-tab:hover,.nav button.lev-tab.active{background:var(--orange);color:#000;border-color:var(--orange)}
+.nav button.bear-tab{border-color:rgba(239,68,68,.4);color:var(--red)}
+.nav button.bear-tab:hover,.nav button.bear-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
 @media(max-width:768px){.header h1{font-size:1.2rem}.grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}.main{padding:12px}.card .price{font-size:1.1rem}.summary-row{grid-template-columns:1fr 1fr}.heatmap{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}}
 </style>
 </head>
@@ -75,7 +90,7 @@ tr:hover{background:rgba(59,130,246,.05)}
 <div class="header">
 <div>
 <h1>美股 ETF 即時追蹤儀表板</h1>
-<div class="header-sub">Real-Time US ETF Tracker | 涵蓋 15 大板塊 60+ ETF</div>
+<div class="header-sub">Real-Time US ETF Tracker | 涵蓋 15 大板塊 + 槓桿 ETF | 90+ ETF</div>
 </div>
 <div class="header-info">
 <span><span class="live-dot"></span> 即時更新</span>
@@ -86,7 +101,7 @@ tr:hover{background:rgba(59,130,246,.05)}
 <div class="status-bar" id="statusBar">載入市場數據中...</div>
 <div class="nav" id="navBar"></div>
 <div class="main" id="mainContent"></div>
-<div class="footer">數據來源：Yahoo Finance | 自動每 60 秒更新 | 僅供參考，非投資建議 | Built with Nebula AI</div>
+<div class="footer">數據來源：Yahoo Finance | 自動每 60 秒更新 | 僅供參考，非投資建議<br>⚠️ 槓桿及反向 ETF 具高風險，每日重設機制導致長期持有必虧，僅適合短線交易 | Built with Nebula AI</div>
 
 <script>
 // ========== ETF METADATA ==========
@@ -162,12 +177,43 @@ const ETF_META = {
   COPX:{name:'Global X Copper Miners',cat:'貴金屬'},
   GLTR:{name:'abrdn Physical Precious Metals',cat:'貴金屬'},
   PPLT:{name:'abrdn Physical Platinum',cat:'貴金屬'},
-  DBB:{name:'Invesco DB Base Metals',cat:'貴金屬'}
+  DBB:{name:'Invesco DB Base Metals',cat:'貴金屬'},
+  // ===== 槓桿 ETF =====
+  // 指數槓桿
+  TQQQ:{name:'ProShares UltraPro QQQ 3X',cat:'指數槓桿'},
+  QLD:{name:'ProShares Ultra QQQ 2X',cat:'指數槓桿'},
+  UPRO:{name:'ProShares UltraPro S&P500 3X',cat:'指數槓桿'},
+  SSO:{name:'ProShares Ultra S&P500 2X',cat:'指數槓桿'},
+  SPXL:{name:'Direxion S&P500 Bull 3X',cat:'指數槓桿'},
+  UDOW:{name:'ProShares UltraPro Dow30 3X',cat:'指數槓桿'},
+  // 半導體槓桿
+  SOXL:{name:'Direxion Semiconductor Bull 3X',cat:'半導體槓桿'},
+  USD:{name:'ProShares Ultra Semiconductor 2X',cat:'半導體槓桿'},
+  // 科技槓桿
+  TECL:{name:'Direxion Technology Bull 3X',cat:'科技槓桿'},
+  ROM:{name:'ProShares Ultra Technology 2X',cat:'科技槓桿'},
+  // 亞洲槓桿
+  KORU:{name:'Direxion MSCI Korea Bull 3X',cat:'亞洲槓桿'},
+  YINN:{name:'Direxion FTSE China Bull 3X',cat:'亞洲槓桿'},
+  TNA:{name:'Direxion Small Cap Bull 3X',cat:'亞洲槓桿'},
+  // 板塊槓桿
+  FAS:{name:'Direxion Financial Bull 3X',cat:'板塊槓桿'},
+  NAIL:{name:'Direxion Homebuilder Bull 3X',cat:'板塊槓桿'},
+  CURE:{name:'Direxion Healthcare Bull 3X',cat:'板塊槓桿'},
+  ERX:{name:'Direxion Energy Bull 2X',cat:'板塊槓桿'},
+  DRN:{name:'Direxion Real Estate Bull 3X',cat:'板塊槓桿'},
+  DPST:{name:'Direxion Regional Banks Bull 3X',cat:'板塊槓桿'},
+  // 反向/熊市
+  SQQQ:{name:'ProShares UltraPro Short QQQ 3X',cat:'反向槓桿'},
+  SPXS:{name:'Direxion S&P500 Bear 3X',cat:'反向槓桿'},
+  SDOW:{name:'ProShares UltraPro Short Dow 3X',cat:'反向槓桿'},
+  SOXS:{name:'Direxion Semiconductor Bear 3X',cat:'反向槓桿'},
+  TECS:{name:'Direxion Technology Bear 3X',cat:'反向槓桿'}
 };
 
 // ========== TAB DEFINITIONS ==========
 const TABS = [
-  {id:'overview',label:'總覽',tickers:['SPY','QQQ','DIA','IWM','SMH','BOTZ','ITA','XBI','URA','REMX','XLU','GLD','EWT']},
+  {id:'overview',label:'總覽',tickers:['SPY','QQQ','DIA','IWM','SMH','BOTZ','ITA','XBI','URA','REMX','XLU','GLD','EWT','TQQQ','SOXL','SQQQ']},
   {id:'us-index',label:'美股指數',tickers:['SPY','QQQ','DIA','IWM','VTI','VOO']},
   {id:'asia',label:'亞洲市場',tickers:['EWT','EWJ','EWY','EWH','FXI','INDA','VWO']},
   {id:'semi',label:'半導體',tickers:['SMH','SOXX','XSD','PSI','SOXQ']},
@@ -182,6 +228,12 @@ const TABS = [
   {id:'rare-earth',label:'稀土',tickers:['REMX','PICK','SLX','XME']},
   {id:'utilities',label:'電力基建/設備',tickers:['XLU','VPU','IDU','GRID','POWR']},
   {id:'precious-metals',label:'貴金屬',tickers:['GLD','IAU','GDX','GDXJ','SLV','SIVR','SIL','CPER','COPX','GLTR','PPLT','DBB']},
+  {id:'leveraged-index',label:'⚡指數槓桿',tickers:['TQQQ','QLD','UPRO','SSO','SPXL','UDOW']},
+  {id:'leveraged-semi',label:'⚡半導體槓桿',tickers:['SOXL','USD','SMH','SOXX']},
+  {id:'leveraged-tech',label:'⚡科技槓桿',tickers:['TECL','ROM','QQQ','TQQQ']},
+  {id:'leveraged-asia',label:'⚡亞洲槓桿',tickers:['KORU','YINN','TNA','EWY','FXI']},
+  {id:'leveraged-sector',label:'⚡板塊槓桿',tickers:['FAS','NAIL','CURE','ERX','DRN','DPST','LABU','DFEN']},
+  {id:'leveraged-bear',label:'🐻反向槓桿',tickers:['SQQQ','SPXS','SDOW','SOXS','TECS']},
   {id:'heatmap',label:'熱力圖',tickers:[]}
 ];
 
@@ -427,6 +479,17 @@ function drawSparkline(canvas, closes, isUp) {
 }
 
 // ========== CARD RENDERING ==========
+const LEVERAGED_CATS = ['指數槓桿','半導體槓桿','科技槓桿','亞洲槓桿','板塊槓桿'];
+const BEAR_CATS = ['反向槓桿'];
+const LEV_MULTIPLIERS = {
+  TQQQ:'3X',QLD:'2X',UPRO:'3X',SSO:'2X',SPXL:'3X',UDOW:'3X',
+  SOXL:'3X',USD:'2X',TECL:'3X',ROM:'2X',
+  KORU:'3X',YINN:'3X',TNA:'3X',
+  FAS:'3X',NAIL:'3X',CURE:'3X',ERX:'2X',DRN:'3X',DPST:'3X',
+  LABU:'3X',DFEN:'3X',BIB:'2X',
+  SQQQ:'3X',SPXS:'3X',SDOW:'3X',SOXS:'3X',TECS:'3X'
+};
+
 function renderCard(ticker) {
   const meta = ETF_META[ticker] || {name:ticker,cat:'其他'};
   const d = etfData[ticker];
@@ -434,9 +497,13 @@ function renderCard(ticker) {
   const isUp = d ? d.change >= 0 : true;
   const cls = isUp ? 'up' : 'down';
   const loadingCls = isLoaded ? '' : ' loading';
-  return `<div class="card${loadingCls}" id="card-${ticker}">
+  const isBear = BEAR_CATS.includes(meta.cat);
+  const isLev = LEVERAGED_CATS.includes(meta.cat) || LEV_MULTIPLIERS[ticker];
+  const levCls = isBear ? ' bear' : (isLev ? ' leveraged' : '');
+  const multiplier = LEV_MULTIPLIERS[ticker];
+  return `<div class="card${loadingCls}${levCls}" id="card-${ticker}">
     <div class="top-row">
-      <span class="ticker-name">${ticker}</span>
+      <span class="ticker-name">${ticker}${multiplier ? ' <span style="font-size:.7rem;opacity:.8">'+multiplier+'</span>' : ''}</span>
       <span class="tag">${meta.cat}</span>
     </div>
     <div class="full-name">${meta.name}</div>
@@ -566,9 +633,13 @@ function getHeatColor(pct) {
 // ========== TABS ==========
 function renderNavBar() {
   const nav = document.getElementById('navBar');
-  nav.innerHTML = TABS.map(t =>
-    `<button class="${t.id === activeTab ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.label}</button>`
-  ).join('');
+  nav.innerHTML = TABS.map(t => {
+    const isLevTab = t.id.startsWith('leveraged-') && t.id !== 'leveraged-bear';
+    const isBearTab = t.id === 'leveraged-bear';
+    const extraCls = isLevTab ? ' lev-tab' : (isBearTab ? ' bear-tab' : '');
+    const activeCls = t.id === activeTab ? ' active' : '';
+    return `<button class="${activeCls}${extraCls}" onclick="switchTab('${t.id}')">${t.label}</button>`;
+  }).join('');
 }
 
 function switchTab(tabId) {
@@ -593,6 +664,12 @@ function renderContent() {
     html += renderOverview();
   } else if (tab.id === 'heatmap') {
     html += renderHeatmap();
+  } else if (tab.id === 'leveraged-bear') {
+    html += `<div class="leveraged-section-title" style="border-color:var(--red)">🐻 ${tab.label} <span class="warn" style="color:var(--red)">⚠️ 反向槓桿 — 高風險，僅供短線交易，長期持有必虧</span></div>`;
+    html += renderCards(tab.tickers);
+  } else if (tab.id.startsWith('leveraged-')) {
+    html += `<div class="leveraged-section-title">⚡ ${tab.label} <span class="warn">⚠️ 槓桿 ETF — 高風險高波動，每日重設，不適合長期持有</span></div>`;
+    html += renderCards(tab.tickers);
   } else {
     html += `<div class="section-title">${tab.label}</div>`;
     html += renderCards(tab.tickers);
