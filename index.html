@@ -331,7 +331,7 @@ async function fetchBatch(tickers, batchSize=3) {
     if (cacheCount > 0) {
       loadedCount = cacheCount;
       updateStatusBar();
-      renderAll();
+      renderContent();
     }
   }
   
@@ -342,7 +342,7 @@ async function fetchBatch(tickers, batchSize=3) {
     const batch = tickers.slice(i, i + batchSize);
     await Promise.all(batch.map(t => fetchTicker(t)));
     // Render progressively as data comes in
-    renderAll();
+    renderContent();
     if (i + batchSize < tickers.length) {
       await randomDelay(800, 1500);
     }
@@ -354,7 +354,7 @@ async function fetchBatch(tickers, batchSize=3) {
     for (let i = 0; i < retries.length; i += 2) {
       const batch = retries.slice(i, i + 2);
       await Promise.all(batch.map(t => fetchTicker(t)));
-      renderAll();
+      renderContent();
       await randomDelay(1500, 3000);
     }
   }
@@ -636,9 +636,26 @@ async function refreshAll() {
 
   await fetchBatch(allTickers, 6);
 
-  document.getElementById('lastUpdate').textContent =
-    '更新: ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  // If all live fetches failed, fall back to preloaded data
+  if (loadedCount === 0) {
+    const preloadedCount = loadPreloadedData();
+    if (preloadedCount > 0) {
+      loadedCount = preloadedCount;
+      totalToLoad = preloadedCount;
+      const ts = PRELOADED_DATA.timestamp;
+      const preloadDate = new Date(ts * 1000);
+      document.getElementById('lastUpdate').textContent =
+        '預載: ' + preloadDate.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    } else {
+      document.getElementById('lastUpdate').textContent =
+        '更新: ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+  } else {
+    document.getElementById('lastUpdate').textContent =
+      '更新: ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
 
+  updateStatusBar();
   renderContent();
 }
 
