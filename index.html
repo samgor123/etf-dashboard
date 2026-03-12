@@ -2,662 +2,674 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>美股 ETF 即時追蹤儀表板</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ETF 追蹤儀表板</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e17;--card:#111827;--card2:#1a2236;--border:#1e2d4a;--text:#e2e8f0;--dim:#8892a8;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--orange:#f59e0b;--cyan:#06b6d4;--pink:#ec4899}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.header{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-.header h1{font-size:1.5rem;background:linear-gradient(90deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.header-sub{font-size:0.75rem;color:var(--dim);margin-top:4px}
-.header-info{display:flex;align-items:center;gap:16px;font-size:0.85rem;color:var(--dim)}
-.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.status-bar{background:var(--card);padding:8px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;font-size:0.8rem;color:var(--dim);overflow-x:auto;white-space:nowrap}
-.status-bar .idx{margin-right:8px;font-weight:600}
-.status-bar .up{color:var(--green)}
-.status-bar .down{color:var(--red)}
-.status-bar .market-state{background:rgba(59,130,246,.15);color:var(--blue);padding:2px 8px;border-radius:4px;font-weight:600}
-.status-bar .load-count{margin-left:auto;color:var(--dim)}
-.nav{background:var(--card2);padding:8px 24px;border-bottom:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
-.nav::-webkit-scrollbar{height:4px}
-.nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.nav button{background:transparent;border:1px solid var(--border);color:var(--dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;white-space:nowrap;transition:all .2s}
-.nav button:hover,.nav button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.main{padding:16px 24px;max-width:1600px;margin:0 auto}
-.section{display:none}
-.section.active{display:block}
-.section-title{font-size:1.1rem;font-weight:700;margin-bottom:12px;padding-left:8px;border-left:3px solid var(--blue)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;transition:transform .2s,border-color .2s,box-shadow .2s;cursor:default}
-.card:hover{transform:translateY(-3px);border-color:var(--blue);box-shadow:0 4px 20px rgba(59,130,246,.15)}
-.card .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
-.card .ticker-name{font-size:0.95rem;font-weight:700;color:var(--blue)}
-.card .tag{font-size:0.6rem;padding:2px 6px;border-radius:4px;background:rgba(59,130,246,.15);color:var(--blue)}
-.card .full-name{font-size:0.78rem;color:var(--dim);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .price-row{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
-.card .price{font-size:1.35rem;font-weight:700}
-.card .change{font-size:0.85rem;font-weight:600}
-.card .change.up{color:var(--green)}
-.card .change.down{color:var(--red)}
-.card .details{display:flex;gap:12px;font-size:0.7rem;color:var(--dim);margin-top:6px}
-.card .details span{display:flex;flex-direction:column}
-.card .details .label{font-size:0.6rem;color:var(--dim);opacity:.7}
-.card .sparkline{height:32px;margin-top:8px}
-.card .sparkline canvas{width:100%;height:100%}
-.card.loading .price-row,.card.loading .details,.card.loading .sparkline{opacity:.3}
-.summary-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px}
-.summary-card{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border);border-radius:12px;padding:18px}
-.summary-card h3{font-size:0.85rem;color:var(--dim);margin-bottom:6px}
-.summary-card .val{font-size:1.8rem;font-weight:700}
-.summary-card .sub{font-size:0.78rem;color:var(--dim);margin-top:4px}
-.loader{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}
+:root{
+  --bg:#0a0e17;--card:#111827;--card2:#1a2236;--border:#1e2d4a;
+  --text:#e2e8f0;--dim:#8892a8;--green:#22c55e;--red:#ef4444;
+  --blue:#3b82f6;--purple:#a855f7;--orange:#f59e0b;--cyan:#06b6d4;
+  --shadow:0 2px 12px rgba(0,0,0,.4);--radius:10px;--tr:.2s ease;
+}
+body.light{
+  --bg:#f1f5f9;--card:#ffffff;--card2:#f8fafc;--border:#e2e8f0;
+  --text:#1e293b;--dim:#64748b;--green:#16a34a;--red:#dc2626;
+  --blue:#2563eb;--purple:#7c3aed;--orange:#d97706;--cyan:#0891b2;
+  --shadow:0 2px 12px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh}
+#hdr{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100}
+#logo{font-size:17px;font-weight:700;color:var(--blue);white-space:nowrap}
+#statusbar{display:flex;gap:14px;flex:1;overflow:hidden}
+.sbi{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}
+.sbt{color:var(--dim)}.sbp{font-weight:600}
+#hdr-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.hbtn{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:5px 11px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;transition:background var(--tr)}
+.hbtn:hover{background:var(--border)}
+.hbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+#tabbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+#tabbar::-webkit-scrollbar{display:none}
+.tab{padding:12px 14px;cursor:pointer;font-size:13px;color:var(--dim);border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr),border-color var(--tr)}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+#main{padding:16px;max-width:1600px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.card.selected{border-color:var(--blue)!important;box-shadow:0 0 0 2px var(--blue)!important}
+.card.alert-active{border-color:var(--orange)!important;box-shadow:0 0 12px rgba(245,158,11,.4)!important;animation:gpulse 1.5s infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 0 12px rgba(245,158,11,.35)}50%{box-shadow:0 0 22px rgba(245,158,11,.6)}}
+.lev-bull-card{box-shadow:0 0 0 1px #22c55e}
+.lev-bear-card{box-shadow:0 0 0 1px #ef4444}
+.lev-vix-card{box-shadow:0 0 0 1px #f59e0b}
+.ch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.cticker{font-size:16px;font-weight:700}
+.cicons{display:flex;gap:4px}
+.cicon{background:none;border:none;cursor:pointer;font-size:14px;padding:2px;opacity:.55;transition:opacity .15s;line-height:1}
+.cicon:hover{opacity:1}
+.cname{font-size:11px;color:var(--dim);margin-bottom:6px;line-height:1.3;min-height:26px}
+.cprice{font-size:22px;font-weight:700;margin-bottom:2px}
+.cchange{font-size:13px;font-weight:600}
+.up{color:var(--green)}.dn{color:var(--red)}.nc{color:var(--dim)}
+.sparkwrap{margin:8px 0 6px;height:60px}
+canvas.spark{width:100%;height:60px;display:block}
+.cdetails{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:6px;font-size:11px}
+.cdl{color:var(--dim)}.cdv{font-weight:600;text-align:right}
+.lev-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:4px}
+.lbull{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.lbear{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.lvix{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+.mstate{position:absolute;top:12px;right:12px;width:7px;height:7px;border-radius:50%}
+.ms-REGULAR{background:var(--green)}.ms-PRE,.ms-POST{background:var(--orange)}.ms-CLOSED,.ms-closed{background:var(--dim)}
+.spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
-.table-wrap{overflow-x:auto;margin-top:12px;border-radius:8px;border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse;font-size:0.85rem}
-th{text-align:left;padding:10px 12px;background:var(--card2);color:var(--dim);font-weight:600;border-bottom:1px solid var(--border);position:sticky;top:0}
-td{padding:10px 12px;border-bottom:1px solid var(--border)}
-tr:hover{background:rgba(59,130,246,.05)}
-.heatmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:4px}
-.heat-cell{padding:10px 6px;border-radius:8px;text-align:center;font-weight:600;transition:transform .2s;cursor:default}
-.heat-cell:hover{transform:scale(1.08);z-index:1}
-.heat-cell .ht{font-size:0.7rem;margin-top:2px}
-.heat-cell .hp{font-size:0.85rem}
-.refresh-btn{background:var(--blue);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;gap:6px;transition:background .2s}
-.refresh-btn:hover{background:#2563eb}
-.refresh-btn:active{transform:scale(.97)}
-.footer{text-align:center;padding:24px;color:var(--dim);font-size:0.75rem;border-top:1px solid var(--border);margin-top:24px;line-height:1.6}
-@media(max-width:768px){.header h1{font-size:1.2rem}.grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}.main{padding:12px}.card .price{font-size:1.1rem}.summary-row{grid-template-columns:1fr 1fr}.heatmap{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}}
+#alert-modal,#compare-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center}
+#alert-modal.show,#compare-modal.show{display:flex}
+.mbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:340px;max-width:92vw;animation:fadeIn .15s}
+@keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.mtitle{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.mclose{background:none;border:none;color:var(--dim);cursor:pointer;font-size:20px;line-height:1}
+.mclose:hover{color:var(--text)}
+.mrow{margin-bottom:12px}
+.mlabel{font-size:12px;color:var(--dim);margin-bottom:4px}
+.minput{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:14px}
+.minput:focus{outline:none;border-color:var(--blue)}
+.mbtn{width:100%;padding:9px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;margin-top:4px}
+.mbtn-p{background:var(--blue);color:#fff}.mbtn-p:hover{opacity:.9}
+.mbtn-d{background:var(--red);color:#fff;margin-top:6px}.mbtn-d:hover{opacity:.9}
+#compare-modal .mbox{width:720px;max-width:96vw}
+.cmptbl{width:100%;border-collapse:collapse;font-size:13px}
+.cmptbl th{background:var(--card2);padding:8px 10px;text-align:left;color:var(--dim);font-weight:600;border-bottom:1px solid var(--border)}
+.cmptbl td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.cmptbl tr:last-child td{border-bottom:none}
+.sec-h{font-size:15px;font-weight:700;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sec-tag{font-size:11px;background:var(--card2);border:1px solid var(--border);color:var(--dim);padding:2px 7px;border-radius:4px;font-weight:400}
+#heatmap-wrap{margin-top:12px}
+#hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:4px}
+.hmc{border-radius:6px;padding:9px 6px;text-align:center;cursor:pointer;transition:filter .15s}
+.hmc:hover{filter:brightness(1.2)}
+.hmt{font-size:12px;font-weight:700;color:#fff}
+.hmp{font-size:11px;color:rgba(255,255,255,.85)}
+#rbar{display:flex;align-items:center;gap:10px;padding:10px 0 4px;color:var(--dim);font-size:12px}
+#prog{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+#pfill{height:100%;background:var(--blue);width:0;transition:width .5s}
+footer{text-align:center;padding:20px;color:var(--dim);font-size:11px;border-top:1px solid var(--border);margin-top:20px;line-height:1.7}
+.empty{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-i{font-size:48px;margin-bottom:12px}
+#cmpbar{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:10px 20px;border-radius:24px;z-index:200;font-size:13px;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(59,130,246,.4)}
+#cmpbar.show{display:flex}
+.cmpbarbtn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:12px;cursor:pointer;font-size:12px}
+.cmpbarbtn:hover{background:rgba(255,255,255,.3)}
+.alerton{color:var(--orange)!important;opacity:1!important}
+.staron{color:#fbbf24!important;opacity:1!important}
 </style>
 </head>
 <body>
-<div class="header">
-<div>
-<h1>美股 ETF 即時追蹤儀表板</h1>
-<div class="header-sub">Real-Time US ETF Tracker | 涵蓋 15 大板塊 60+ ETF</div>
+
+<div id="hdr">
+  <div id="logo">📊 ETF 儀表板</div>
+  <div id="statusbar"></div>
+  <div id="hdr-right">
+    <button class="hbtn" id="cmp-btn" onclick="toggleCompareMode()">⚖ 比較</button>
+    <button class="hbtn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+  </div>
 </div>
-<div class="header-info">
-<span><span class="live-dot"></span> 即時更新</span>
-<span id="lastUpdate">載入中...</span>
-<button class="refresh-btn" onclick="refreshAll()">&#8635; 重新整理</button>
+
+<div id="tabbar"></div>
+
+<div id="main">
+  <div id="rbar">
+    <span id="rtime">載入中...</span>
+    <div id="prog"><div id="pfill"></div></div>
+    <button class="hbtn" onclick="forceRefresh()">↻ 更新</button>
+  </div>
+  <div id="content"></div>
 </div>
+
+<div id="alert-modal">
+  <div class="mbox">
+    <div class="mtitle"><span>🔔 價格提醒 — <span id="am-ticker"></span></span><button class="mclose" onclick="closeAlertModal()">×</button></div>
+    <div class="mrow"><div class="mlabel">高於此價格時提醒</div><input class="minput" id="am-hi" type="number" placeholder="例如 500.00"></div>
+    <div class="mrow"><div class="mlabel">低於此價格時提醒</div><input class="minput" id="am-lo" type="number" placeholder="例如 400.00"></div>
+    <button class="mbtn mbtn-p" onclick="saveAlert()">儲存提醒</button>
+    <button class="mbtn mbtn-d" onclick="clearAlert()">清除提醒</button>
+  </div>
 </div>
-<div class="status-bar" id="statusBar">載入市場數據中...</div>
-<div class="nav" id="navBar"></div>
-<div class="main" id="mainContent"></div>
-<div class="footer">數據來源：Yahoo Finance | 自動每 60 秒更新 | 僅供參考，非投資建議 | Built with Nebula AI</div>
+
+<div id="compare-modal">
+  <div class="mbox">
+    <div class="mtitle"><span>📊 ETF 比較</span><button class="mclose" onclick="closeCompare()">×</button></div>
+    <div id="cmp-content"></div>
+  </div>
+</div>
+
+<div id="cmpbar">
+  <span id="cmpbar-txt">已選 0 個</span>
+  <button class="cmpbarbtn" onclick="showCompareModal()">📊 比較</button>
+  <button class="cmpbarbtn" onclick="clearSelected()">✕ 清除</button>
+</div>
 
 <script>
-// ========== ETF METADATA ==========
-const ETF_META = {
-  SPY:{name:'SPDR S&P 500',cat:'美股指數'},
-  QQQ:{name:'Invesco QQQ Nasdaq-100',cat:'美股指數'},
-  DIA:{name:'SPDR Dow Jones',cat:'美股指數'},
-  IWM:{name:'iShares Russell 2000',cat:'美股指數'},
-  VTI:{name:'Vanguard Total Stock',cat:'美股指數'},
-  VOO:{name:'Vanguard S&P 500',cat:'美股指數'},
-  EWT:{name:'iShares MSCI 台灣',cat:'亞洲市場'},
-  EWJ:{name:'iShares MSCI 日本',cat:'亞洲市場'},
-  EWY:{name:'iShares MSCI 韓國',cat:'亞洲市場'},
-  EWH:{name:'iShares MSCI 香港',cat:'亞洲市場'},
-  FXI:{name:'iShares China Large-Cap',cat:'亞洲市場'},
-  INDA:{name:'iShares MSCI India',cat:'亞洲市場'},
-  VWO:{name:'Vanguard Emerging Markets',cat:'亞洲市場'},
-  SMH:{name:'VanEck Semiconductor',cat:'半導體'},
-  SOXX:{name:'iShares Semiconductor',cat:'半導體'},
-  XSD:{name:'SPDR S&P Semiconductor',cat:'半導體'},
-  PSI:{name:'Invesco Semiconductor',cat:'半導體'},
-  SOXQ:{name:'Invesco PHLX Semiconductor',cat:'半導體'},
-  BOTZ:{name:'Global X Robotics & AI',cat:'AI 相關'},
-  AIQ:{name:'Global X AI & Technology',cat:'AI 相關'},
-  ROBT:{name:'First Trust AI & Robotics',cat:'AI 相關'},
-  IRBO:{name:'iShares Robotics & AI',cat:'AI 相關'},
-  CHAT:{name:'Roundhill Generative AI',cat:'AI 相關'},
-  AIPI:{name:'REX AI Equity Premium',cat:'AI 相關'},
-  IGV:{name:'iShares Tech-Software',cat:'軟體'},
-  WCLD:{name:'WisdomTree Cloud',cat:'軟體'},
-  CLOU:{name:'Global X Cloud',cat:'軟體'},
-  BUG:{name:'Global X Cybersecurity',cat:'軟體'},
-  SKYY:{name:'First Trust Cloud',cat:'軟體'},
-  XSW:{name:'SPDR S&P Software',cat:'軟體'},
-  HACK:{name:'ETFMG Cyber Security',cat:'AI 基建'},
-  CIBR:{name:'First Trust Cybersecurity',cat:'AI 基建'},
-  ITA:{name:'iShares Aerospace & Defense',cat:'軍工'},
-  PPA:{name:'Invesco Aerospace & Defense',cat:'軍工'},
-  XAR:{name:'SPDR Aerospace & Defense',cat:'軍工'},
-  DFEN:{name:'Direxion A&D Bull 3X',cat:'軍工'},
-  SHLD:{name:'Global X Defense Tech',cat:'軍工'},
-  FITE:{name:'SPDR Future Security',cat:'軍工'},
-  ARKX:{name:'ARK Space & Defense',cat:'無人機'},
-  ARKQ:{name:'ARK Autonomous Tech',cat:'無人機'},
-  QTUM:{name:'Defiance Quantum ETF',cat:'量子電腦'},
-  XBI:{name:'SPDR S&P Biotech',cat:'生物科技'},
-  IBB:{name:'iShares Biotechnology',cat:'生物科技'},
-  BBC:{name:'Virtus LifeSci Biotech',cat:'生物科技'},
-  ARKG:{name:'ARK Genomic Revolution',cat:'生物科技'},
-  LABU:{name:'Direxion Biotech Bull 3X',cat:'生物科技'},
-  BIB:{name:'ProShares Ultra Biotech',cat:'生物科技'},
-  URA:{name:'Global X Uranium',cat:'核電'},
-  URNM:{name:'Sprott Uranium Miners',cat:'核電'},
-  NLR:{name:'VanEck Uranium+Nuclear',cat:'核電'},
-  NUKZ:{name:'Range Nuclear Renaissance',cat:'核電'},
-  REMX:{name:'VanEck Rare Earth',cat:'稀土'},
-  PICK:{name:'iShares Metals & Mining',cat:'稀土'},
-  SLX:{name:'VanEck Steel',cat:'稀土'},
-  XME:{name:'SPDR Metals & Mining',cat:'稀土'},
-  XLU:{name:'Utilities Select Sector',cat:'電力基建'},
-  VPU:{name:'Vanguard Utilities',cat:'電力基建'},
-  IDU:{name:'iShares US Utilities',cat:'電力基建'},
-  GRID:{name:'First Trust Smart Grid',cat:'電力基建'},
-  POWR:{name:'iShares Power Infrastructure',cat:'電力基建'},
-  GLD:{name:'SPDR Gold Shares',cat:'貴金屬'},
-  IAU:{name:'iShares Gold Trust',cat:'貴金屬'},
-  GDX:{name:'VanEck Gold Miners',cat:'貴金屬'},
-  GDXJ:{name:'VanEck Junior Gold Miners',cat:'貴金屬'},
-  SLV:{name:'iShares Silver Trust',cat:'貴金屬'},
-  SIVR:{name:'abrdn Physical Silver',cat:'貴金屬'},
-  SIL:{name:'Global X Silver Miners',cat:'貴金屬'},
-  CPER:{name:'United States Copper Index',cat:'貴金屬'},
-  COPX:{name:'Global X Copper Miners',cat:'貴金屬'},
-  GLTR:{name:'abrdn Physical Precious Metals',cat:'貴金屬'},
-  PPLT:{name:'abrdn Physical Platinum',cat:'貴金屬'},
-  DBB:{name:'Invesco DB Base Metals',cat:'貴金屬'}
+const CACHE_KEY='etf_dash_v2_cache';
+const ALERT_KEY='etf_dash_alerts';
+const WL_KEY='etf_dash_watchlist';
+const PREFS_KEY='etf_dash_prefs';
+
+const ETFS={
+  SPY:{n:'SPDR S&P 500 ETF',c:'美股指數'},QQQ:{n:'Invesco Nasdaq 100 ETF',c:'美股指數'},
+  DIA:{n:'SPDR Dow Jones ETF',c:'美股指數'},IWM:{n:'iShares Russell 2000 ETF',c:'美股指數'},
+  VTI:{n:'Vanguard Total Stock Market ETF',c:'美股指數'},VOO:{n:'Vanguard S&P 500 ETF',c:'美股指數'},
+  SMH:{n:'VanEck Semiconductor ETF',c:'半導體'},SOXX:{n:'iShares Semiconductor ETF',c:'半導體'},
+  XSD:{n:'SPDR S&P Semiconductor ETF',c:'半導體'},PSI:{n:'Invesco Dynamic Semiconductors ETF',c:'半導體'},
+  SOXQ:{n:'Invesco PHLX Semiconductor ETF',c:'半導體'},
+  BOTZ:{n:'Global X Robotics & AI ETF',c:'AI 相關'},AIQ:{n:'Global X AI & Technology ETF',c:'AI 相關'},
+  ROBT:{n:'First Trust Nasdaq AI & Robotics ETF',c:'AI 相關'},IRBO:{n:'iShares Robotics & AI ETF',c:'AI 相關'},
+  CHAT:{n:'Roundhill Generative AI & Technology ETF',c:'AI 相關'},AIPI:{n:'REX AI Equity Premium Income ETF',c:'AI 相關'},
+  IGV:{n:'iShares Expanded Tech-Software ETF',c:'AI 基建'},CLOU:{n:'Global X Cloud Computing ETF',c:'AI 基建'},
+  WCLD:{n:'WisdomTree Cloud Computing ETF',c:'AI 基建'},SKYY:{n:'First Trust Cloud Computing ETF',c:'AI 基建'},
+  HACK:{n:'ETFMG Prime Cyber Security ETF',c:'AI 基建'},CIBR:{n:'First Trust Cybersecurity ETF',c:'AI 基建'},
+  ITA:{n:'iShares US Aerospace & Defense ETF',c:'軍工'},PPA:{n:'Invesco Aerospace & Defense ETF',c:'軍工'},
+  XAR:{n:'SPDR S&P Aerospace & Defense ETF',c:'軍工'},DFEN:{n:'Direxion Aerospace & Defense 3X',c:'軍工'},
+  SHLD:{n:'Global X Defense Tech ETF',c:'軍工'},FITE:{n:'ProShares USD Defense ETF',c:'軍工'},
+  XBI:{n:'SPDR S&P Biotech ETF',c:'生物科技'},IBB:{n:'iShares Biotech ETF',c:'生物科技'},
+  BBC:{n:'Virtus LifeSci Biotech Clinical Trials ETF',c:'生物科技'},ARKG:{n:'ARK Genomic Revolution ETF',c:'生物科技'},
+  LABU:{n:'Direxion Biotech Bull 3X',c:'生物科技'},BIB:{n:'ProShares Ultra Nasdaq Biotech 2X',c:'生物科技'},
+  URA:{n:'Global X Uranium ETF',c:'核電'},URNM:{n:'Sprott Uranium Miners ETF',c:'核電'},
+  NLR:{n:'VanEck Uranium+Nuclear Energy ETF',c:'核電'},NUKZ:{n:'Range Nuclear Renaissance ETF',c:'核電'},
+  REMX:{n:'VanEck Rare Earth/Strategic Metals ETF',c:'稀土'},PICK:{n:'iShares MSCI Global Metals & Mining ETF',c:'稀土'},
+  SLX:{n:'VanEck Steel ETF',c:'稀土'},XME:{n:'SPDR S&P Metals & Mining ETF',c:'稀土'},
+  XLU:{n:'Utilities Select Sector SPDR ETF',c:'電力基建'},VPU:{n:'Vanguard Utilities ETF',c:'電力基建'},
+  IDU:{n:'iShares US Utilities ETF',c:'電力基建'},GRID:{n:'First Trust NASDAQ Clean Edge Smart Grid ETF',c:'電力基建'},
+  POWR:{n:'Advisors Inner Circle REGI ETF',c:'電力基建'},
+  GLD:{n:'SPDR Gold Shares ETF',c:'貴金屬'},IAU:{n:'iShares Gold Trust',c:'貴金屬'},
+  GDX:{n:'VanEck Gold Miners ETF',c:'貴金屬'},GDXJ:{n:'VanEck Junior Gold Miners ETF',c:'貴金屬'},
+  SLV:{n:'iShares Silver Trust',c:'貴金屬'},SIVR:{n:'abrdn Physical Silver Shares ETF',c:'貴金屬'},
+  SIL:{n:'Global X Silver Miners ETF',c:'貴金屬'},CPER:{n:'United States Copper Index Fund',c:'貴金屬'},
+  COPX:{n:'Global X Copper Miners ETF',c:'貴金屬'},
+  TQQQ:{n:'ProShares UltraPro QQQ 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  SOXL:{n:'Direxion Semiconductor Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  UPRO:{n:'ProShares UltraPro S&P500 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  FNGU:{n:'MicroSectors FANG+ 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  SPXL:{n:'Direxion S&P500 Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  LABU2:{ticker:'LABU',n:'Direxion Biotech Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  DFEN2:{ticker:'DFEN',n:'Direxion Aerospace Defense 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  CURE:{n:'Direxion Healthcare Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  FAS:{n:'Direxion Financial Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
+  UVXY:{n:'ProShares Ultra VIX Short-Term 1.5X',c:'槓桿 ETF',lev:'1.5x VIX',lc:'#f59e0b'},
+  SQQQ:{n:'ProShares UltraPro Short QQQ 3X',c:'槓桿 ETF',lev:'3x Bear',lc:'#ef4444'},
+  SPXS:{n:'Direxion S&P500 Bear 3X',c:'槓桿 ETF',lev:'3x Bear',lc:'#ef4444'},
+  SRTY:{n:'Direxion Russell 2000 Bear 3X',c:'槓桿 ETF',lev:'3x Bear',lc:'#ef4444'}
 };
 
-// ========== TAB DEFINITIONS ==========
-const TABS = [
-  {id:'overview',label:'總覽',tickers:['SPY','QQQ','DIA','IWM','SMH','BOTZ','ITA','XBI','URA','REMX','XLU','GLD','EWT']},
-  {id:'us-index',label:'美股指數',tickers:['SPY','QQQ','DIA','IWM','VTI','VOO']},
-  {id:'asia',label:'亞洲市場',tickers:['EWT','EWJ','EWY','EWH','FXI','INDA','VWO']},
-  {id:'semi',label:'半導體',tickers:['SMH','SOXX','XSD','PSI','SOXQ']},
-  {id:'ai',label:'AI 相關',tickers:['BOTZ','AIQ','ROBT','IRBO','CHAT','AIPI']},
-  {id:'ai-infra',label:'AI 基建',tickers:['IGV','CLOU','WCLD','SKYY','HACK','CIBR']},
-  {id:'software',label:'軟體',tickers:['IGV','WCLD','CLOU','BUG','SKYY','XSW']},
-  {id:'defense',label:'軍工',tickers:['ITA','PPA','XAR','DFEN','SHLD','FITE']},
-  {id:'drone',label:'無人機',tickers:['ARKX','ARKQ','ITA','DFEN']},
-  {id:'quantum',label:'量子電腦',tickers:['QTUM','ARKQ','SMH','SOXX']},
-  {id:'biotech',label:'生物科技',tickers:['XBI','IBB','BBC','ARKG','LABU','BIB']},
-  {id:'nuclear',label:'核電',tickers:['URA','URNM','NLR','NUKZ']},
-  {id:'rare-earth',label:'稀土',tickers:['REMX','PICK','SLX','XME']},
-  {id:'utilities',label:'電力基建/設備',tickers:['XLU','VPU','IDU','GRID','POWR']},
-  {id:'precious-metals',label:'貴金屬',tickers:['GLD','IAU','GDX','GDXJ','SLV','SIVR','SIL','CPER','COPX','GLTR','PPLT','DBB']},
-  {id:'heatmap',label:'熱力圖',tickers:[]}
+// Resolve actual ticker symbol
+function tkr(k){return ETFS[k]&&ETFS[k].ticker?ETFS[k].ticker:k;}
+
+const TABS=[
+  {id:'overview',label:'總覽'},
+  {id:'leverage',label:'槓桿 ETF'},
+  {id:'us-index',label:'美股指數'},
+  {id:'semi',label:'半導體'},
+  {id:'ai',label:'AI 相關'},
+  {id:'ai-infra',label:'AI 基建'},
+  {id:'defense',label:'軍工'},
+  {id:'biotech',label:'生物科技'},
+  {id:'nuclear',label:'核電'},
+  {id:'rareearth',label:'稀土'},
+  {id:'utilities',label:'電力基建'},
+  {id:'metals',label:'貴金屬'},
+  {id:'heatmap',label:'熱力圖'},
+  {id:'watchlist',label:'⭐ 自選'}
 ];
 
-// ========== STATE ==========
-const etfData = {};
-let loadedCount = 0;
-let totalToLoad = 0;
-let activeTab = 'overview';
-let refreshTimer = null;
+const TAB_ETFS={
+  'leverage':['TQQQ','SOXL','UPRO','FNGU','SPXL','LABU2','DFEN2','CURE','FAS','UVXY','SQQQ','SPXS','SRTY'],
+  'us-index':['SPY','QQQ','DIA','IWM','VTI','VOO'],
+  'semi':['SMH','SOXX','XSD','PSI','SOXQ'],
+  'ai':['BOTZ','AIQ','ROBT','IRBO','CHAT','AIPI'],
+  'ai-infra':['IGV','CLOU','WCLD','SKYY','HACK','CIBR'],
+  'defense':['ITA','PPA','XAR','DFEN','SHLD','FITE'],
+  'biotech':['XBI','IBB','BBC','ARKG','LABU','BIB'],
+  'nuclear':['URA','URNM','NLR','NUKZ'],
+  'rareearth':['REMX','PICK','SLX','XME'],
+  'utilities':['XLU','VPU','IDU','GRID','POWR'],
+  'metals':['GLD','IAU','GDX','GDXJ','SLV','SIVR','SIL','CPER','COPX']
+};
 
-// ========== DATA FETCHING ==========
-const PROXIES = [
-  (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-  (url) => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+const OVERVIEW_CATS=[
+  {label:'美股指數',etfs:['SPY','QQQ','IWM']},
+  {label:'槓桿 ETF',etfs:['TQQQ','SOXL','SQQQ']},
+  {label:'半導體',etfs:['SMH','SOXX']},
+  {label:'AI 相關',etfs:['BOTZ','AIQ']},
+  {label:'AI 基建',etfs:['IGV','CLOU']},
+  {label:'軍工',etfs:['ITA','PPA']},
+  {label:'生物科技',etfs:['XBI','IBB']},
+  {label:'核電',etfs:['URA','URNM']},
+  {label:'稀土',etfs:['REMX','XME']},
+  {label:'電力基建',etfs:['XLU','GRID']},
+  {label:'貴金屬',etfs:['GLD','GDX','SLV']}
 ];
 
-const CACHE_KEY = 'etf_dashboard_cache';
-const CACHE_TS_KEY = 'etf_dashboard_cache_ts';
+// All unique tickers to fetch
+const ALL_TICKERS=[...new Set(Object.keys(ETFS).map(tkr))];
 
-function saveToCache(data) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-    localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
-  } catch(e) {}
+let cache={};
+let alerts={};
+let watchlist=new Set();
+let compareMode=false;
+let selected=new Set();
+let currentTab='overview';
+let refreshTimer=null;
+let progTimer=null;
+let progStart=0;
+
+// Load prefs
+(function(){
+  try{
+    const p=JSON.parse(localStorage.getItem(PREFS_KEY)||'{}');
+    if(p.theme==='light')document.body.classList.add('light');
+    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');
+    const now=Date.now();
+    Object.entries(c).forEach(([k,v])=>{if(v.ts&&(now-v.ts)<86400000)cache[k]=v;});
+    alerts=JSON.parse(localStorage.getItem(ALERT_KEY)||'{}');
+    const wl=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
+    watchlist=new Set(wl);
+  }catch(e){}
+})();
+
+function savePrefs(k,v){
+  try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||'{}');p[k]=v;localStorage.setItem(PREFS_KEY,JSON.stringify(p));}catch(e){}
+}
+function saveAlerts(){try{localStorage.setItem(ALERT_KEY,JSON.stringify(alerts));}catch(e){}}
+function saveWatchlist(){try{localStorage.setItem(WL_KEY,JSON.stringify([...watchlist]));}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(cache));}catch(e){}}
+
+// Theme toggle
+function toggleTheme(){
+  const isLight=document.body.classList.toggle('light');
+  document.getElementById('theme-btn').textContent=isLight?'☀️':'🌙';
+  savePrefs('theme',isLight?'light':'dark');
 }
 
-function loadFromCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    const ts = parseInt(localStorage.getItem(CACHE_TS_KEY) || '0');
-    if (raw && (Date.now() - ts) < 24 * 60 * 60 * 1000) {
-      return JSON.parse(raw);
-    }
-  } catch(e) {}
-  return null;
+// Tab rendering
+function renderTabs(){
+  const tb=document.getElementById('tabbar');
+  tb.innerHTML=TABS.map(t=>`<div class="tab${t.id===currentTab?' active':''}" onclick="switchTab('${t.id}')">${t.label}</div>`).join('');
 }
 
-function parseYahooResponse(json, isGetEndpoint) {
-  let data = json;
-  if (isGetEndpoint && json.contents) {
-    data = typeof json.contents === 'string' ? JSON.parse(json.contents) : json.contents;
+function switchTab(id){
+  currentTab=id;
+  renderTabs();
+  renderContent();
+}
+
+// STATUS BAR
+function updateStatusBar(){
+  const sb=document.getElementById('statusbar');
+  const tickers=['SPY','QQQ','SMH','GLD'];
+  const items=tickers.map(t=>{
+    const d=cache[t];
+    if(!d)return`<div class="sbi"><span class="sbt">${t}</span><span class="sbp">—</span></div>`;
+    const chg=d.price&&d.prev?(((d.price-d.prev)/d.prev)*100).toFixed(2):null;
+    const cls=chg>0?'up':chg<0?'dn':'nc';
+    return`<div class="sbi"><span class="sbt">${t}</span><span class="sbp">${d.price?d.price.toFixed(2):'—'}</span><span class="${cls}" style="font-size:11px">${chg!=null?(chg>0?'+':'')+chg+'%':''}</span></div>`;
+  }).join('');
+  sb.innerHTML=items;
+}
+
+// ETF CARD
+function levBadge(key){
+  const e=ETFS[key];
+  if(!e||!e.lev)return'';
+  if(e.lev.includes('Bull'))return`<div class="lev-badge lbull">${e.lev}</div>`;
+  if(e.lev.includes('Bear'))return`<div class="lev-badge lbear">${e.lev}</div>`;
+  return`<div class="lev-badge lvix">${e.lev}</div>`;
+}
+
+function levCardClass(key){
+  const e=ETFS[key];
+  if(!e||!e.lev)return'';
+  if(e.lev.includes('Bull'))return' lev-bull-card';
+  if(e.lev.includes('Bear'))return' lev-bear-card';
+  return' lev-vix-card';
+}
+
+function buildCard(key){
+  const sym=tkr(key);
+  const meta=ETFS[key]||{n:sym,c:''};
+  const d=cache[sym]||{};
+  const price=d.price;
+  const prev=d.prev;
+  const chg=price&&prev?price-prev:null;
+  const pct=chg&&prev?(chg/prev*100):null;
+  const cls=pct>0?'up':pct<0?'dn':'nc';
+  const sign=pct>0?'+':'';
+  const hasAlert=alerts[sym]&&(alerts[sym].hi||alerts[sym].lo);
+  const inWL=watchlist.has(sym);
+  const isSelected=selected.has(key);
+  const ms=d.state||'';
+  const cardCls=`card${levCardClass(key)}${isSelected?' selected':''}${hasAlert&&checkAlertBreach(sym)?' alert-active':''}`;
+
+  const vol=d.vol?formatVol(d.vol):'—';
+  const hi=d.hi?d.hi.toFixed(2):'—';
+  const lo=d.lo?d.lo.toFixed(2):'—';
+
+  return`<div class="${cardCls}" id="card-${key}" onclick="cardClick('${key}')">
+  <div class="mstate ms-${ms}"></div>
+  <div class="ch">
+    <div class="cticker">${sym}</div>
+    <div class="cicons" onclick="event.stopPropagation()">
+      <button class="cicon${inWL?' staron':''}" title="自選" onclick="toggleWatchlist('${sym}')">${inWL?'⭐':'☆'}</button>
+      <button class="cicon${hasAlert?' alerton':''}" title="設置提醒" onclick="openAlertModal('${sym}')">${hasAlert?'🔔':'🔕'}</button>
+    </div>
+  </div>
+  ${levBadge(key)}
+  <div class="cname">${meta.n}</div>
+  <div class="cprice ${cls}">${price?'$'+price.toFixed(2):'載入中...'}</div>
+  <div class="cchange ${cls}">${pct!=null?sign+pct.toFixed(2)+'% ('+sign+chg.toFixed(2)+')':'—'}</div>
+  <div class="sparkwrap"><canvas class="spark" id="sp-${key}"></canvas></div>
+  <div class="cdetails">
+    <span class="cdl">最高</span><span class="cdv">${hi}</span>
+    <span class="cdl">最低</span><span class="cdv">${lo}</span>
+    <span class="cdl">成交量</span><span class="cdv">${vol}</span>
+    <span class="cdl">幣種</span><span class="cdv">${d.currency||'USD'}</span>
+  </div>
+</div>`;
+}
+
+function formatVol(v){
+  if(v>=1e9)return(v/1e9).toFixed(1)+'B';
+  if(v>=1e6)return(v/1e6).toFixed(1)+'M';
+  if(v>=1e3)return(v/1e3).toFixed(1)+'K';
+  return v;
+}
+
+function checkAlertBreach(sym){
+  const a=alerts[sym];const d=cache[sym];
+  if(!a||!d||!d.price)return false;
+  return(a.hi&&d.price>=a.hi)||(a.lo&&d.price<=a.lo);
+}
+
+// RENDER CONTENT
+function renderContent(){
+  const el=document.getElementById('content');
+  if(currentTab==='heatmap'){renderHeatmap();return;}
+  if(currentTab==='watchlist'){renderWatchlist();return;}
+  if(currentTab==='overview'){renderOverview();return;}
+  const keys=TAB_ETFS[currentTab]||[];
+  el.innerHTML=`<div class="grid">${keys.map(buildCard).join('')}</div>`;
+  keys.forEach(k=>drawSparkline(k));
+}
+
+function renderOverview(){
+  const el=document.getElementById('content');
+  let html='';
+  OVERVIEW_CATS.forEach(cat=>{
+    html+=`<div class="sec-h">${cat.label}<span class="sec-tag">${cat.etfs.length} ETF</span></div>`;
+    html+=`<div class="grid">${cat.etfs.map(buildCard).join('')}</div>`;
+  });
+  el.innerHTML=html;
+  OVERVIEW_CATS.forEach(cat=>cat.etfs.forEach(k=>drawSparkline(k)));
+}
+
+function renderWatchlist(){
+  const el=document.getElementById('content');
+  if(watchlist.size===0){
+    el.innerHTML=`<div class="empty"><div class="empty-i">⭐</div><div>尚未加入自選股</div><div style="margin-top:8px;font-size:12px;color:var(--dim)">點擊各 ETF 卡片上的 ☆ 圖示加入自選</div></div>`;
+    return;
   }
-  return data;
+  const keys=[...watchlist];
+  el.innerHTML=`<div class="grid">${keys.map(k=>{
+    const key=Object.keys(ETFS).find(ek=>tkr(ek)===k)||k;
+    return buildCard(key);
+  }).join('')}</div>`;
+  keys.forEach(k=>{const key=Object.keys(ETFS).find(ek=>tkr(ek)===k)||k;drawSparkline(key);});
 }
 
-function randomDelay(min, max) {
-  return new Promise(r => setTimeout(r, min + Math.random() * (max - min)));
+function renderHeatmap(){
+  const el=document.getElementById('content');
+  const allKeys=Object.keys(ETFS).filter(k=>!k.endsWith('2'));
+  let html=`<div id="heatmap-wrap"><div style="color:var(--dim);font-size:12px;margin-bottom:10px">顏色深淺代表漲跌幅度 — 點擊查看詳情</div><div id="hm-grid">`;
+  allKeys.forEach(k=>{
+    const sym=tkr(k);const d=cache[sym]||{};
+    const pct=d.price&&d.prev?(d.price-d.prev)/d.prev*100:null;
+    const bg=pct!=null?heatColor(pct):'#374151';
+    html+=`<div class="hmc" style="background:${bg}" onclick="alert('${sym}: '+(${pct!=null?pct.toFixed(2):0})+'%')">
+      <div class="hmt">${sym}</div>
+      <div class="hmp">${pct!=null?(pct>0?'+':'')+pct.toFixed(2)+'%':'—'}</div>
+    </div>`;
+  });
+  html+='</div></div>';
+  el.innerHTML=html;
 }
 
-async function fetchTicker(ticker) {
-  const baseUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=5d`;
-  const MAX_RETRIES = 5;
+function heatColor(pct){
+  const v=Math.min(Math.abs(pct)/5,1);
+  if(pct>0){const g=Math.round(80+175*v);return`rgb(0,${g},60)`;}
+  else{const r=Math.round(80+175*v);return`rgb(${r},0,0)`;}
+}
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    for (let i = 0; i < PROXIES.length; i++) {
-      try {
-        const url = PROXIES[i](baseUrl);
-        const isGetEndpoint = i === 1;
-        const timeout = 10000 + attempt * 2000;
-        const resp = await fetch(url, {signal: AbortSignal.timeout(timeout)});
-        if (!resp.ok) continue;
-        const json = await resp.json();
-        const data = parseYahooResponse(json, isGetEndpoint);
-        const result = data.chart?.result?.[0];
-        if (!result) continue;
-        const meta = result.meta;
-        const quotes = result.indicators?.quote?.[0];
-        const closes = quotes?.close || [];
-        const highs = quotes?.high || [];
-        const lows = quotes?.low || [];
-        const volumes = quotes?.volume || [];
-        const price = meta.regularMarketPrice || closes[closes.length-1] || 0;
-        if (price === 0) continue;
-        const prevClose = meta.chartPreviousClose || meta.previousClose || closes[0] || price;
-        const change = price - prevClose;
-        const changePct = prevClose ? (change / prevClose) * 100 : 0;
-        const validCloses = closes.filter(c => c != null && c > 0);
-        const validHighs = highs.filter(h=>h!=null&&h>0);
-        const validLows = lows.filter(l=>l!=null&&l>0);
-        const dayHigh = validHighs.length ? Math.max(...validHighs) : (meta.regularMarketDayHigh || price);
-        const dayLow = validLows.length ? Math.min(...validLows) : (meta.regularMarketDayLow || price);
-        const validVols = volumes.filter(v=>v!=null&&v>0);
-        const lastVol = validVols.length ? validVols[validVols.length-1] : (meta.regularMarketVolume || 0);
-        etfData[ticker] = {
-          price, prevClose, change, changePct,
-          high: dayHigh, low: dayLow, volume: lastVol,
-          closes: validCloses,
-          marketState: meta.marketState || 'CLOSED',
-          currency: meta.currency || 'USD'
-        };
-        loadedCount++;
-        updateStatusBar();
-        return true;
-      } catch(e) {
-        continue;
-      }
-    }
-    if (attempt < MAX_RETRIES - 1) {
-      await randomDelay(1000 + attempt * 500, 2000 + attempt * 1000);
-    }
+// SPARKLINES
+function drawSparkline(key){
+  const sym=tkr(key);
+  const d=cache[sym];
+  const canvas=document.getElementById('sp-'+key);
+  if(!canvas)return;
+  const closes=d&&d.closes?d.closes.filter(x=>x!=null):[];
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||230;const H=60;
+  canvas.width=W;canvas.height=H;
+  ctx.clearRect(0,0,W,H);
+  if(closes.length<2){
+    ctx.fillStyle='var(--dim)';
+    ctx.font='11px sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('暫無數據',W/2,H/2);
+    return;
   }
-  const cached = loadFromCache();
-  if (cached && cached[ticker] && cached[ticker].price > 0) {
-    etfData[ticker] = {...cached[ticker], marketState: 'CACHED'};
-    loadedCount++;
-    updateStatusBar();
-    return true;
+  const mn=Math.min(...closes),mx=Math.max(...closes);
+  const rng=mx-mn||1;
+  const pts=closes.map((v,i)=>({x:i/(closes.length-1)*W,y:H-((v-mn)/rng)*(H-10)-4}));
+  const up=closes[closes.length-1]>=closes[0];
+  const color=up?'#22c55e':'#ef4444';
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,up?'rgba(34,197,94,.25)':'rgba(239,68,68,.25)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+}
+
+// CARD CLICK
+function cardClick(key){
+  if(compareMode){
+    if(selected.has(key)){selected.delete(key);}
+    else if(selected.size<4){selected.add(key);}
+    updateCmpBar();
+    const cardEl=document.getElementById('card-'+key);
+    if(cardEl){cardEl.classList.toggle('selected',selected.has(key));}
+    return;
   }
-  etfData[ticker] = {price:0,prevClose:0,change:0,changePct:0,high:0,low:0,volume:0,closes:[],marketState:'FAILED',currency:'USD'};
-  failedTickers.push(ticker);
+}
+
+function toggleCompareMode(){
+  compareMode=!compareMode;
+  const btn=document.getElementById('cmp-btn');
+  btn.classList.toggle('active',compareMode);
+  if(!compareMode){selected.clear();updateCmpBar();renderContent();}
+}
+
+function updateCmpBar(){
+  const bar=document.getElementById('cmpbar');
+  const txt=document.getElementById('cmpbar-txt');
+  if(selected.size>0&&compareMode){
+    bar.classList.add('show');
+    txt.textContent=`已選 ${selected.size} 個 ETF`;
+  }else{bar.classList.remove('show');}
+}
+
+function clearSelected(){selected.clear();updateCmpBar();renderContent();}
+
+function showCompareModal(){
+  if(selected.size<2){alert('請選擇至少 2 個 ETF');return;}
+  const keys=[...selected];
+  let rows='';
+  const fields=[['最新價','price',v=>v?'$'+v.toFixed(2):'—'],['前收市','prev',v=>v?'$'+v.toFixed(2):'—'],
+    ['漲跌幅','pct',v=>v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—'],
+    ['最高','hi',v=>v?'$'+v.toFixed(2):'—'],
+    ['最低','lo',v=>v?'$'+v.toFixed(2):'—'],
+    ['成交量','vol',v=>v?formatVol(v):'—']];
+  rows=fields.map(([label,field,fmt])=>{
+    const cells=keys.map(k=>{
+      const sym=tkr(k);const d=cache[sym]||{};
+      let val;
+      if(field==='pct'){val=d.price&&d.prev?(d.price-d.prev)/d.prev*100:null;}
+      else{val=d[field];}
+      const cls=field==='pct'?(val>0?'up':val<0?'dn':'nc'):'';
+      return`<td class="${cls}">${fmt(val)}</td>`;
+    }).join('');
+    return`<tr><td style="color:var(--dim)">${label}</td>${cells}</tr>`;
+  }).join('');
+  const hdrs=keys.map(k=>`<th>${tkr(k)}</th>`).join('');
+  document.getElementById('cmp-content').innerHTML=`<div style="overflow-x:auto"><table class="cmptbl"><thead><tr><th>指標</th>${hdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  document.getElementById('compare-modal').classList.add('show');
+}
+
+function closeCompare(){document.getElementById('compare-modal').classList.remove('show');}
+
+// WATCHLIST
+function toggleWatchlist(sym){
+  if(watchlist.has(sym)){watchlist.delete(sym);}else{watchlist.add(sym);}
+  saveWatchlist();
+  renderContent();
   updateStatusBar();
+}
+
+// ALERT MODAL
+let alertTarget=null;
+function openAlertModal(sym){
+  alertTarget=sym;
+  document.getElementById('am-ticker').textContent=sym;
+  const a=alerts[sym]||{};
+  document.getElementById('am-hi').value=a.hi||''
+  document.getElementById('am-lo').value=a.lo||''
+  document.getElementById('alert-modal').classList.add('show');
+}
+function closeAlertModal(){document.getElementById('alert-modal').classList.remove('show');alertTarget=null;}
+function saveAlert(){
+  if(!alertTarget)return;
+  const hi=parseFloat(document.getElementById('am-hi').value)||null;
+  const lo=parseFloat(document.getElementById('am-lo').value)||null;
+  if(hi||lo){alerts[alertTarget]={hi,lo};}else{delete alerts[alertTarget];}
+  saveAlerts();closeAlertModal();renderContent();
+}
+function clearAlert(){if(alertTarget){delete alerts[alertTarget];saveAlerts();}closeAlertModal();renderContent();}
+
+// FETCH
+const PROXIES=[
+  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+  u=>'https://api.allorigins.win/get?url='+encodeURIComponent(u)
+];
+
+async function fetchTicker(sym){
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`;
+  for(let pi=0;pi<PROXIES.length;pi++){
+    try{
+      const res=await fetch(PROXIES[pi](url),{signal:AbortSignal.timeout(8000)});
+      if(!res.ok)continue;
+      let data=await res.json();
+      if(data.contents)data=JSON.parse(data.contents);
+      const meta=data?.chart?.result?.[0]?.meta;
+      const q=data?.chart?.result?.[0]?.indicators?.quote?.[0];
+      if(!meta)continue;
+      const closes=q?.close||[];
+      cache[sym]={
+        price:meta.regularMarketPrice,
+        prev:meta.previousClose||meta.chartPreviousClose,
+        hi:meta.regularMarketDayHigh,
+        lo:meta.regularMarketDayLow,
+        vol:meta.regularMarketVolume,
+        currency:meta.currency,
+        state:meta.marketState,
+        closes:closes.slice(-5),
+        ts:Date.now()
+      };
+      return true;
+    }catch(e){}
+  }
   return false;
 }
 
-let failedTickers = [];
+async function fetchAll(){
+  document.getElementById('rtime').innerHTML='<span class="spin"></span> 更新中...';
+  startProgress();
+  const unique=[...new Set(Object.keys(ETFS).map(tkr))];
+  const batchSize=3;
+  for(let i=0;i<unique.length;i+=batchSize){
+    const batch=unique.slice(i,i+batchSize);
+    await Promise.all(batch.map(fetchTicker));
+    updateStatusBar();
+    if(currentTab!=='watchlist'||watchlist.size>0)renderContent();
+    if(i+batchSize<unique.length)await sleep(800);
+  }
+  saveCache();
+  checkAllAlerts();
+  updateStatusBar();
+  renderContent();
+  const now=new Date();
+  document.getElementById('rtime').textContent=`上次更新：${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+}
 
-async function fetchBatch(tickers, batchSize=3) {
-  const cached = loadFromCache();
-  if (cached) {
-    let cacheCount = 0;
-    for (const t of tickers) {
-      if (cached[t] && cached[t].price > 0) {
-        etfData[t] = {...cached[t], marketState: 'CACHED'};
-        cacheCount++;
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function startProgress(){
+  progStart=Date.now();
+  clearInterval(progTimer);
+  progTimer=setInterval(()=>{
+    const elapsed=Date.now()-progStart;
+    const pct=Math.min(elapsed/60000*100,99);
+    document.getElementById('pfill').style.width=pct+'%';
+  },500);
+  setTimeout(()=>{clearInterval(progTimer);document.getElementById('pfill').style.width='100%';},60500);
+}
+
+function checkAllAlerts(){
+  Object.keys(alerts).forEach(sym=>{
+    if(checkAlertBreach(sym)){
+      const a=alerts[sym];const d=cache[sym];
+      if('Notification'in window&&Notification.permission==='granted'){
+        new Notification(`ETF 提醒：${sym}`,{body:`目前價格 $${d.price.toFixed(2)} 已觸發提醒`});
       }
     }
-    if (cacheCount > 0) {
-      loadedCount = cacheCount;
-      updateStatusBar();
-      renderAll();
-    }
-  }
-
-  failedTickers = [];
-  // Don't reset loadedCount to 0 — keep preloaded/cached count so cards keep showing data
-  for (let i = 0; i < tickers.length; i += batchSize) {
-    const batch = tickers.slice(i, i + batchSize);
-    await Promise.all(batch.map(t => fetchTicker(t)));
-    renderAll();
-    if (i + batchSize < tickers.length) {
-      await randomDelay(800, 1500);
-    }
-  }
-  if (failedTickers.length > 0) {
-    const retries = [...failedTickers];
-    failedTickers = [];
-    for (let i = 0; i < retries.length; i += 2) {
-      const batch = retries.slice(i, i + 2);
-      await Promise.all(batch.map(t => fetchTicker(t)));
-      renderAll();
-      await randomDelay(1500, 3000);
-    }
-  }
-  saveToCache(etfData);
-}
-
-function getAllUniqueTickers() {
-  return Object.keys(ETF_META);
-}
-
-// ========== MARKET STATE ==========
-function getMarketStateLabel() {
-  const spy = etfData['SPY'];
-  if (!spy) return '載入中...';
-  const state = spy.marketState;
-  const map = {
-    'REGULAR': '開市中',
-    'PRE': '盤前交易',
-    'POST': '盤後交易',
-    'PREPRE': '盤前交易',
-    'POSTPOST': '盤後交易',
-    'CLOSED': '已收市'
-  };
-  return map[state] || '已收市';
-}
-
-// ========== STATUS BAR ==========
-function updateStatusBar() {
-  const bar = document.getElementById('statusBar');
-  const indices = ['SPY','QQQ','DIA','IWM'];
-  let html = '';
-  indices.forEach(t => {
-    const d = etfData[t];
-    if (d && d.price > 0) {
-      const cls = d.change >= 0 ? 'up' : 'down';
-      const arrow = d.change >= 0 ? '▲' : '▼';
-      html += `<span class="idx"><strong>${t}</strong> $${d.price.toFixed(2)} <span class="${cls}">${arrow} ${d.changePct.toFixed(2)}%</span></span>`;
-    }
   });
-  html += `<span class="market-state">${getMarketStateLabel()}</span>`;
-  html += `<span class="load-count">已載入: ${loadedCount}/${totalToLoad}</span>`;
-  bar.innerHTML = html || '載入市場數據中...';
+  if('Notification'in window&&Notification.permission==='default'){Notification.requestPermission();}
 }
 
-// ========== FORMATTING ==========
-function fmtPrice(p) {
-  if (!p || p === 0) return '--';
-  return '$' + p.toFixed(2);
-}
-function fmtChange(c, pct) {
-  if (c === undefined) return '';
-  const sign = c >= 0 ? '+' : '';
-  return `${sign}${c.toFixed(2)} (${sign}${pct.toFixed(2)}%)`;
-}
-function fmtVol(v) {
-  if (!v) return '--';
-  if (v >= 1e9) return (v/1e9).toFixed(1) + 'B';
-  if (v >= 1e6) return (v/1e6).toFixed(1) + 'M';
-  if (v >= 1e3) return (v/1e3).toFixed(1) + 'K';
-  return v.toString();
+function forceRefresh(){
+  clearTimeout(refreshTimer);
+  fetchAll().then(()=>{scheduleRefresh();});
 }
 
-// ========== SPARKLINE ==========
-function drawSparkline(canvas, closes, isUp) {
-  if (!canvas || !closes || closes.length < 2) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width = canvas.offsetWidth * 2;
-  const h = canvas.height = canvas.offsetHeight * 2;
-  ctx.clearRect(0, 0, w, h);
-  const min = Math.min(...closes);
-  const max = Math.max(...closes);
-  const range = max - min || 1;
-  const color = isUp ? '#22c55e' : '#ef4444';
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  closes.forEach((c, i) => {
-    const x = (i / (closes.length - 1)) * w;
-    const y = h - ((c - min) / range) * (h * 0.8) - h * 0.1;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  const lastX = w;
-  const gradient = ctx.createLinearGradient(0, 0, 0, h);
-  gradient.addColorStop(0, isUp ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)');
-  gradient.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.lineTo(lastX, h);
-  ctx.lineTo(0, h);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
+function scheduleRefresh(){
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(()=>{fetchAll().then(scheduleRefresh);},60000);
 }
 
-// ========== CARD RENDERING ==========
-function renderCard(ticker) {
-  const meta = ETF_META[ticker] || {name:ticker,cat:'其他'};
-  const d = etfData[ticker];
-  const isLoaded = d && d.price > 0;
-  const isUp = d ? d.change >= 0 : true;
-  const cls = isUp ? 'up' : 'down';
-  const loadingCls = isLoaded ? '' : ' loading';
-  return `<div class="card${loadingCls}" id="card-${ticker}">
-    <div class="top-row">
-      <span class="ticker-name">${ticker}</span>
-      <span class="tag">${meta.cat}</span>
-    </div>
-    <div class="full-name">${meta.name}</div>
-    <div class="price-row">
-      <span class="price">${isLoaded ? fmtPrice(d.price) : '<span class="loader"></span>'}</span>
-      <span class="change ${cls}">${isLoaded ? fmtChange(d.change, d.changePct) : ''}</span>
-    </div>
-    <div class="details">
-      <span><span class="label">HIGH</span>${isLoaded ? fmtPrice(d.high) : '--'}</span>
-      <span><span class="label">LOW</span>${isLoaded ? fmtPrice(d.low) : '--'}</span>
-      <span><span class="label">VOL</span>${isLoaded ? fmtVol(d.volume) : '--'}</span>
-    </div>
-    <div class="sparkline"><canvas id="spark-${ticker}"></canvas></div>
-  </div>`;
-}
+// INIT
+renderTabs();
+renderContent();
+updateStatusBar();
+fetchAll().then(scheduleRefresh);
 
-function renderCards(tickers) {
-  return '<div class="grid">' + tickers.map(t => renderCard(t)).join('') + '</div>';
-}
-
-function drawAllSparklines(tickers) {
-  tickers.forEach(t => {
-    const d = etfData[t];
-    if (d && d.closes.length >= 2) {
-      const canvas = document.getElementById('spark-' + t);
-      if (canvas) drawSparkline(canvas, d.closes, d.change >= 0);
-    }
-  });
-}
-
-// ========== OVERVIEW TAB ==========
-function renderOverview() {
-  const all = getAllUniqueTickers();
-  const loaded = all.filter(t => etfData[t] && etfData[t].price > 0);
-  const gainers = loaded.filter(t => etfData[t].change >= 0);
-  const losers = loaded.filter(t => etfData[t].change < 0);
-  const sorted = [...loaded].sort((a,b) => etfData[b].changePct - etfData[a].changePct);
-  const best = sorted[0];
-  const worst = sorted[sorted.length - 1];
-
-  let html = '<div class="summary-row">';
-  html += `<div class="summary-card"><h3>追蹤 ETF 數量</h3><div class="val">${all.length}</div><div class="sub">已載入 ${loaded.length} 檔</div></div>`;
-  html += `<div class="summary-card"><h3>上漲 / 下跌</h3><div class="val" style="color:var(--green)">${gainers.length} <span style="color:var(--dim);font-size:1rem">/ </span><span style="color:var(--red)">${losers.length}</span></div><div class="sub">${loaded.length ? (gainers.length/loaded.length*100).toFixed(0) : 0}% 上漲</div></div>`;
-  html += `<div class="summary-card"><h3>最佳表現</h3><div class="val" style="color:var(--green)">${best ? best : '--'}</div><div class="sub">${best ? fmtChange(etfData[best].change, etfData[best].changePct) : ''}</div></div>`;
-  html += `<div class="summary-card"><h3>最差表現</h3><div class="val" style="color:var(--red)">${worst ? worst : '--'}</div><div class="sub">${worst ? fmtChange(etfData[worst].change, etfData[worst].changePct) : ''}</div></div>`;
-  html += '</div>';
-
-  html += '<div class="section-title">主要 ETF</div>';
-  const mainTickers = TABS.find(t=>t.id==='overview').tickers;
-  html += renderCards(mainTickers);
-
-  html += '<div class="section-title" style="margin-top:20px">板塊表現排名</div>';
-  html += renderSectorTable();
-  return html;
-}
-
-function renderSectorTable() {
-  const sectors = {};
-  for (const [ticker, meta] of Object.entries(ETF_META)) {
-    if (!sectors[meta.cat]) sectors[meta.cat] = [];
-    const d = etfData[ticker];
-    if (d && d.price > 0) {
-      sectors[meta.cat].push({ticker, ...d});
-    }
-  }
-  const sectorAvgs = Object.entries(sectors).map(([name, etfs]) => {
-    if (etfs.length === 0) return {name, avg:0, count:0, best:'--', worst:'--'};
-    const avg = etfs.reduce((s,e)=>s+e.changePct,0)/etfs.length;
-    const sorted = [...etfs].sort((a,b)=>b.changePct-a.changePct);
-    return {name, avg, count:etfs.length, best:sorted[0]?.ticker||'--', worst:sorted[sorted.length-1]?.ticker||'--'};
-  }).sort((a,b) => b.avg - a.avg);
-
-  let html = '<div class="table-wrap"><table><thead><tr><th>#</th><th>板塊</th><th>平均漲跌%</th><th>ETF 數</th><th>最佳</th><th>最差</th></tr></thead><tbody>';
-  sectorAvgs.forEach((s, i) => {
-    const cls = s.avg >= 0 ? 'up' : 'down';
-    const sign = s.avg >= 0 ? '+' : '';
-    html += `<tr><td>${i+1}</td><td><strong>${s.name}</strong></td><td class="change ${cls}">${sign}${s.avg.toFixed(2)}%</td><td>${s.count}</td><td>${s.best}</td><td>${s.worst}</td></tr>`;
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-// ========== HEATMAP TAB ==========
-function renderHeatmap() {
-  const all = getAllUniqueTickers();
-  const sorted = [...all].sort((a,b) => {
-    const da = etfData[a], db = etfData[b];
-    const pa = da ? da.changePct : 0, pb = db ? db.changePct : 0;
-    return pb - pa;
-  });
-
-  let html = '<div class="section-title">全部 ETF 熱力圖 (按漲跌幅排列)</div>';
-  html += '<div class="heatmap">';
-  sorted.forEach(t => {
-    const d = etfData[t];
-    const pct = d ? d.changePct : 0;
-    const bg = getHeatColor(pct);
-    const textColor = Math.abs(pct) > 1 ? '#fff' : 'rgba(255,255,255,.85)';
-    const sign = pct >= 0 ? '+' : '';
-    html += `<div class="heat-cell" style="background:${bg};color:${textColor}">
-      <div class="hp"><strong>${t}</strong></div>
-      <div class="ht">${sign}${pct.toFixed(2)}%</div>
-      <div class="ht">${d && d.price>0 ? fmtPrice(d.price) : '--'}</div>
-    </div>`;
-  });
-  html += '</div>';
-  return html;
-}
-
-function getHeatColor(pct) {
-  const intensity = Math.min(Math.abs(pct) / 4, 1);
-  if (pct >= 0) {
-    const r = Math.round(10 + (22-10) * (1-intensity));
-    const g = Math.round(80 + (197-80) * intensity);
-    const b = Math.round(30 + (94-30) * intensity * 0.5);
-    return `rgb(${r},${g},${b})`;
-  } else {
-    const r = Math.round(80 + (220-80) * intensity);
-    const g = Math.round(20 + (40-20) * (1-intensity));
-    const b = Math.round(20 + (40-20) * (1-intensity));
-    return `rgb(${r},${g},${b})`;
-  }
-}
-
-// ========== TABS ==========
-function renderNavBar() {
-  const nav = document.getElementById('navBar');
-  nav.innerHTML = TABS.map(t =>
-    `<button class="${t.id === activeTab ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.label}</button>`
-  ).join('');
-}
-
-function switchTab(tabId) {
-  activeTab = tabId;
-  renderNavBar();
-  renderContent();
-}
-
-function renderContent() {
-  const main = document.getElementById('mainContent');
-  const tab = TABS.find(t => t.id === activeTab);
-  if (!tab) return;
-
-  let html = '<div class="section active">';
-  if (tab.id === 'overview') {
-    html += renderOverview();
-  } else if (tab.id === 'heatmap') {
-    html += renderHeatmap();
-  } else {
-    html += `<div class="section-title">${tab.label}</div>`;
-    html += renderCards(tab.tickers);
-  }
-  html += '</div>';
-  main.innerHTML = html;
-
-  requestAnimationFrame(() => {
-    const tickers = tab.id === 'overview' ? TABS.find(t=>t.id==='overview').tickers : tab.tickers;
-    if (tab.id !== 'heatmap') drawAllSparklines(tickers);
-  });
-}
-
-// ========== RENDER ALL (called after data loads) ==========
-function renderAll() {
-  renderContent();
-}
-
-// ========== REFRESH ==========
-async function refreshAll() {
-  // Don't reset loadedCount at start — keep showing existing data during refresh
-  const allTickers = getAllUniqueTickers();
-  totalToLoad = allTickers.length;
-  updateStatusBar();
-
-  await fetchBatch(allTickers, 6);
-
-  document.getElementById('lastUpdate').textContent =
-    '更新: ' + new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-
-  renderContent();
-}
-
-// ========== PRELOADED DATA (auto-generated) ==========
-const PRELOADED_DATA = {"timestamp": 1773152976, "count": 71, "data": {"SPY": {"price": 677.57, "prevClose": 680.33, "change": -2.76, "changePct": -0.41, "high": 687.09, "low": 662.39, "volume": 14061582, "closes": [685.13, 681.31, 672.38, 678.27, 677.57], "marketState": "CLOSED", "currency": "USD"}, "QQQ": {"price": 608.07, "prevClose": 601.58, "change": 6.49, "changePct": 1.08, "high": 612.88, "low": 591.33, "volume": 14160800, "closes": [610.75, 608.91, 599.75, 607.76, 608.07], "marketState": "CLOSED", "currency": "USD"}, "DIA": {"price": 477.59, "prevClose": 485.52, "change": -7.93, "changePct": -1.63, "high": 489.03, "low": 466.68, "volume": 1772004, "closes": [487.74, 479.84, 475.23, 477.88, 477.59], "marketState": "CLOSED", "currency": "USD"}, "IWM": {"price": 254.18, "prevClose": 259.24, "change": -5.06, "changePct": -1.95, "high": 262.96, "low": 244.39, "volume": 11328591, "closes": [261.76, 256.76, 250.89, 253.62, 254.18], "marketState": "CLOSED", "currency": "USD"}, "VTI": {"price": 333.93, "prevClose": 335.73, "change": -1.8, "changePct": -0.54, "high": 339.06, "low": 326.13, "volume": 1589816, "closes": [338.19, 336.0, 331.41, 334.28, 333.93], "marketState": "CLOSED", "currency": "USD"}, "VOO": {"price": 623.19, "prevClose": 625.72, "change": -2.53, "changePct": -0.4, "high": 631.96, "low": 609.2, "volume": 2216573, "closes": [630.18, 626.81, 618.43, 623.8, 623.19], "marketState": "CLOSED", "currency": "USD"}, "EWT": {"price": 70.83, "prevClose": 71.29, "change": -0.47, "changePct": -0.65, "high": 71.85, "low": 67.99, "volume": 1923923, "closes": [71.62, 70.4, 69.52, 70.76, 70.82], "marketState": "CLOSED", "currency": "USD"}, "EWJ": {"price": 86.62, "prevClose": 86.83, "change": -0.2, "changePct": -0.24, "high": 88.72, "low": 82.92, "volume": 1824215, "closes": [88.59, 85.89, 84.77, 85.64, 86.62], "marketState": "CLOSED", "currency": "USD"}, "EWY": {"price": 132.84, "prevClose": 132.34, "change": 0.5, "changePct": 0.38, "high": 140.67, "low": 121.55, "volume": 9725475, "closes": [134.37, 125.74, 126.73, 133.89, 132.84], "marketState": "CLOSED", "currency": "USD"}, "EWH": {"price": 23.44, "prevClose": 23.51, "change": -0.07, "changePct": -0.3, "high": 23.46, "low": 22.66, "volume": 2615628, "closes": [23.31, 23.15, 23.17, 23.14, 23.44], "marketState": "CLOSED", "currency": "USD"}, "FXI": {"price": 36.7, "prevClose": 36.06, "change": 0.64, "changePct": 1.77, "high": 36.71, "low": 35.35, "volume": 6596107, "closes": [36.21, 35.58, 35.82, 36.48, 36.7], "marketState": "CLOSED", "currency": "USD"}, "INDA": {"price": 50.11, "prevClose": 50.22, "change": -0.11, "changePct": -0.22, "high": 50.55, "low": 49.01, "volume": 2270596, "closes": [50.27, 50.37, 49.99, 49.98, 50.11], "marketState": "CLOSED", "currency": "USD"}, "VWO": {"price": 55.61, "prevClose": 55.23, "change": 0.38, "changePct": 0.69, "high": 55.67, "low": 53.66, "volume": 2911912, "closes": [55.58, 54.85, 54.47, 55.13, 55.61], "marketState": "CLOSED", "currency": "USD"}, "SMH": {"price": 397.91, "prevClose": 391.06, "change": 6.85, "changePct": 1.75, "high": 401.23, "low": 374.16, "volume": 2143972, "closes": [399.1, 395.35, 380.56, 394.37, 397.91], "marketState": "CLOSED", "currency": "USD"}, "BOTZ": {"price": 35.47, "prevClose": 36.28, "change": -0.81, "changePct": -2.24, "high": 36.46, "low": 35.97, "volume": 550843, "closes": [36.28, 35.97, 35.47, 35.47, 35.47], "marketState": "CLOSED", "currency": "USD"}, "SOXX": {"price": 339.81, "prevClose": 334.78, "change": 5.03, "changePct": 1.5, "high": 343.81, "low": 316.22, "volume": 1822301, "closes": [341.54, 337.76, 323.51, 336.37, 339.81], "marketState": "CLOSED", "currency": "USD"}, "IGV": {"price": 85.61, "prevClose": 84.12, "change": 1.49, "changePct": 1.78, "high": 88.58, "low": 84.08, "volume": 11355513, "closes": [85.65, 87.62, 87.97, 87.71, 85.61], "marketState": "CLOSED", "currency": "USD"}, "SKYY": {"price": 111.85, "prevClose": 109.87, "change": 1.98, "changePct": 1.8, "high": 114.7, "low": 109.82, "volume": 150291, "closes": [111.59, 113.5, 113.17, 113.67, 111.85], "marketState": "CLOSED", "currency": "USD"}, "ITA": {"price": 240.64, "prevClose": 244.98, "change": -4.34, "changePct": -1.77, "high": 247.22, "low": 236.14, "volume": 202918, "closes": [246.97, 240.04, 242.2, 241.99, 240.64], "marketState": "CLOSED", "currency": "USD"}, "XBI": {"price": 127.65, "prevClose": 123.5, "change": 4.15, "changePct": 3.36, "high": 128.15, "low": 120.85, "volume": 2569906, "closes": [126.42, 123.9, 124.0, 127.12, 127.65], "marketState": "CLOSED", "currency": "USD"}, "IBB": {"price": 172.33, "prevClose": 170.1, "change": 2.23, "changePct": 1.31, "high": 173.5, "low": 165.31, "volume": 188564, "closes": [172.97, 168.67, 167.56, 171.29, 172.33], "marketState": "CLOSED", "currency": "USD"}, "URA": {"price": 51.36, "prevClose": 52.31, "change": -0.95, "changePct": -1.82, "high": 52.57, "low": 50.79, "volume": 2727376, "closes": [52.31, 51.50, 51.00, 51.36, 51.36], "marketState": "CLOSED", "currency": "USD"}, "REMX": {"price": 95.56, "prevClose": 96.49, "change": -0.93, "changePct": -0.96, "high": 97.84, "low": 95.56, "volume": 644225, "closes": [96.49, 96.00, 95.56, 95.56, 95.56], "marketState": "CLOSED", "currency": "USD"}, "XLU": {"price": 46.59, "prevClose": 47.07, "change": -0.48, "changePct": -1.03, "high": 47.42, "low": 46.04, "volume": 6442084, "closes": [47.27, 46.9, 46.74, 46.85, 46.58], "marketState": "CLOSED", "currency": "USD"}, "GLD": {"price": 478.69, "prevClose": 468.14, "change": 10.55, "changePct": 2.25, "high": 479.76, "low": 463.91, "volume": 2406215, "closes": [471.8, 466.13, 473.51, 472.53, 478.69], "marketState": "CLOSED", "currency": "USD"}}};
-
-function loadPreloadedData() {
-  if (!PRELOADED_DATA || !PRELOADED_DATA.data) return 0;
-  let count = 0;
-  for (const [ticker, d] of Object.entries(PRELOADED_DATA.data)) {
-    if (d.price > 0) {
-      etfData[ticker] = {...d, marketState: d.marketState || 'PRELOADED'};
-      count++;
-    }
-  }
-  return count;
-}
-
-// ========== INIT ==========
-async function init() {
-  renderNavBar();
-  renderContent();
-
-  const preloadedCount = loadPreloadedData();
-  if (preloadedCount > 0) {
-    loadedCount = preloadedCount;
-    totalToLoad = preloadedCount;
-    updateStatusBar();
-    renderAll();
-    const ts = PRELOADED_DATA.timestamp;
-    const preloadDate = new Date(ts * 1000);
-    document.getElementById('lastUpdate').textContent =
-      '預載: ' + preloadDate.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  }
-
-  try { await refreshAll(); } catch(e) { console.log('Live refresh failed, using preloaded data'); }
-
-  if (refreshTimer) clearInterval(refreshTimer);
-  refreshTimer = setInterval(refreshAll, 60000);
-}
-
-init();
+// Close modals on backdrop click
+document.getElementById('alert-modal').addEventListener('click',function(e){if(e.target===this)closeAlertModal();});
+document.getElementById('compare-modal').addEventListener('click',function(e){if(e.target===this)closeCompare();});
 </script>
+
+<footer>數據來源：Yahoo Finance ｜ 自動每 60 秒更新 ｜ 僅供參考，非投資建議 ｜ Built with Nebula AI</footer>
 </body>
 </html>
