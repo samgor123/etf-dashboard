@@ -3,673 +3,478 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ETF 追蹤儀表板</title>
+<title>ETF 即時追蹤儀表板</title>
 <style>
-:root{
-  --bg:#0a0e17;--card:#111827;--card2:#1a2236;--border:#1e2d4a;
-  --text:#e2e8f0;--dim:#8892a8;--green:#22c55e;--red:#ef4444;
-  --blue:#3b82f6;--purple:#a855f7;--orange:#f59e0b;--cyan:#06b6d4;
-  --shadow:0 2px 12px rgba(0,0,0,.4);--radius:10px;--tr:.2s ease;
-}
-body.light{
-  --bg:#f1f5f9;--card:#ffffff;--card2:#f8fafc;--border:#e2e8f0;
-  --text:#1e293b;--dim:#64748b;--green:#16a34a;--red:#dc2626;
-  --blue:#2563eb;--purple:#7c3aed;--orange:#d97706;--cyan:#0891b2;
-  --shadow:0 2px 12px rgba(0,0,0,.1);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh}
-#hdr{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100}
-#logo{font-size:17px;font-weight:700;color:var(--blue);white-space:nowrap}
-#statusbar{display:flex;gap:14px;flex:1;overflow:hidden}
-.sbi{display:flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap}
-.sbt{color:var(--dim)}.sbp{font-weight:600}
-#hdr-right{display:flex;align-items:center;gap:8px;margin-left:auto}
-.hbtn{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:5px 11px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;transition:background var(--tr)}
-.hbtn:hover{background:var(--border)}
-.hbtn.active{background:var(--blue);border-color:var(--blue);color:#fff}
-#tabbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-#tabbar::-webkit-scrollbar{display:none}
-.tab{padding:12px 14px;cursor:pointer;font-size:13px;color:var(--dim);border-bottom:2px solid transparent;white-space:nowrap;transition:color var(--tr),border-color var(--tr)}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-#main{padding:16px;max-width:1600px;margin:0 auto}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;position:relative;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
-.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
-.card.selected{border-color:var(--blue)!important;box-shadow:0 0 0 2px var(--blue)!important}
-.card.alert-active{border-color:var(--orange)!important;box-shadow:0 0 12px rgba(245,158,11,.4)!important;animation:gpulse 1.5s infinite}
-@keyframes gpulse{0%,100%{box-shadow:0 0 12px rgba(245,158,11,.35)}50%{box-shadow:0 0 22px rgba(245,158,11,.6)}}
-.lev-bull-card{box-shadow:0 0 0 1px #22c55e}
-.lev-bear-card{box-shadow:0 0 0 1px #ef4444}
-.lev-vix-card{box-shadow:0 0 0 1px #f59e0b}
-.ch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-.cticker{font-size:16px;font-weight:700}
-.cicons{display:flex;gap:4px}
-.cicon{background:none;border:none;cursor:pointer;font-size:14px;padding:2px;opacity:.55;transition:opacity .15s;line-height:1}
-.cicon:hover{opacity:1}
-.cname{font-size:11px;color:var(--dim);margin-bottom:6px;line-height:1.3;min-height:26px}
-.cprice{font-size:22px;font-weight:700;margin-bottom:2px}
-.cchange{font-size:13px;font-weight:600}
-.up{color:var(--green)}.dn{color:var(--red)}.nc{color:var(--dim)}
-.sparkwrap{margin:8px 0 6px;height:60px}
-canvas.spark{width:100%;height:60px;display:block}
-.cdetails{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:6px;font-size:11px}
-.cdl{color:var(--dim)}.cdv{font-weight:600;text-align:right}
-.lev-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;margin-bottom:4px}
-.lbull{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
-.lbear{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
-.lvix{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
-.mstate{position:absolute;top:12px;right:12px;width:7px;height:7px;border-radius:50%}
-.ms-REGULAR{background:var(--green)}.ms-PRE,.ms-POST{background:var(--orange)}.ms-CLOSED,.ms-closed{background:var(--dim)}
-.spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
-#alert-modal,#compare-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center}
-#alert-modal.show,#compare-modal.show{display:flex}
-.mbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;width:340px;max-width:92vw;animation:fadeIn .15s}
-@keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-.mtitle{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-.mclose{background:none;border:none;color:var(--dim);cursor:pointer;font-size:20px;line-height:1}
-.mclose:hover{color:var(--text)}
-.mrow{margin-bottom:12px}
-.mlabel{font-size:12px;color:var(--dim);margin-bottom:4px}
-.minput{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:14px}
-.minput:focus{outline:none;border-color:var(--blue)}
-.mbtn{width:100%;padding:9px;border-radius:6px;border:none;cursor:pointer;font-size:13px;font-weight:600;margin-top:4px}
-.mbtn-p{background:var(--blue);color:#fff}.mbtn-p:hover{opacity:.9}
-.mbtn-d{background:var(--red);color:#fff;margin-top:6px}.mbtn-d:hover{opacity:.9}
-#compare-modal .mbox{width:720px;max-width:96vw}
-.cmptbl{width:100%;border-collapse:collapse;font-size:13px}
-.cmptbl th{background:var(--card2);padding:8px 10px;text-align:left;color:var(--dim);font-weight:600;border-bottom:1px solid var(--border)}
-.cmptbl td{padding:8px 10px;border-bottom:1px solid var(--border)}
-.cmptbl tr:last-child td{border-bottom:none}
-.sec-h{font-size:15px;font-weight:700;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-.sec-tag{font-size:11px;background:var(--card2);border:1px solid var(--border);color:var(--dim);padding:2px 7px;border-radius:4px;font-weight:400}
-#heatmap-wrap{margin-top:12px}
-#hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:4px}
-.hmc{border-radius:6px;padding:9px 6px;text-align:center;cursor:pointer;transition:filter .15s}
-.hmc:hover{filter:brightness(1.2)}
-.hmt{font-size:12px;font-weight:700;color:#fff}
-.hmp{font-size:11px;color:rgba(255,255,255,.85)}
-#rbar{display:flex;align-items:center;gap:10px;padding:10px 0 4px;color:var(--dim);font-size:12px}
-#prog{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-#pfill{height:100%;background:var(--blue);width:0;transition:width .5s}
-footer{text-align:center;padding:20px;color:var(--dim);font-size:11px;border-top:1px solid var(--border);margin-top:20px;line-height:1.7}
-.empty{text-align:center;padding:60px 20px;color:var(--dim)}
-.empty-i{font-size:48px;margin-bottom:12px}
-#cmpbar{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;padding:10px 20px;border-radius:24px;z-index:200;font-size:13px;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(59,130,246,.4)}
-#cmpbar.show{display:flex}
-.cmpbarbtn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 12px;border-radius:12px;cursor:pointer;font-size:12px}
-.cmpbarbtn:hover{background:rgba(255,255,255,.3)}
-.alerton{color:var(--orange)!important;opacity:1!important}
-.staron{color:#fbbf24!important;opacity:1!important}
+:root{--bg:#0a0e17;--card:#111827;--card2:#1a2236;--border:#1e2d4a;--text:#e2e8f0;--dim:#8892a8;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--orange:#f59e0b;--cyan:#06b6d4;}
+body.light{--bg:#f1f5f9;--card:#ffffff;--card2:#f8fafc;--border:#e2e8f0;--text:#1e293b;--dim:#64748b;--green:#16a34a;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--orange:#d97706;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;}
+button{cursor:pointer;border:none;background:none;color:var(--text);}
+#hdr{background:var(--card);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+#logo{font-size:16px;font-weight:700;color:var(--blue);white-space:nowrap;}
+#ticker-bar{flex:1;overflow:hidden;font-size:13px;color:var(--dim);display:flex;gap:16px;flex-wrap:nowrap;overflow-x:auto;}
+.tb-item{white-space:nowrap;display:flex;gap:4px;}
+.tb-item .sym{color:var(--text);font-weight:600;}
+#hdr-right{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.hbtn{padding:6px 12px;border-radius:6px;font-size:13px;border:1px solid var(--border);background:var(--card2);color:var(--text);transition:.2s;}
+.hbtn:hover{border-color:var(--blue);color:var(--blue);}
+.hbtn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+#tabbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:2px;overflow-x:auto;position:sticky;top:53px;z-index:99;}
+.tab{padding:10px 14px;font-size:13px;color:var(--dim);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:.2s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+#main{padding:16px;max-width:1600px;margin:0 auto;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:.2s;position:relative;min-width:210px;}
+.card:hover{border-color:var(--blue);transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,.15);}
+.card.selected{border-color:var(--blue);box-shadow:0 0 0 2px rgba(59,130,246,.4);}
+.card.alert-active{border-color:var(--orange);animation:alertglow 1.5s ease-in-out infinite;}
+@keyframes alertglow{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.4);}50%{box-shadow:0 0 12px 4px rgba(245,158,11,.3);}}
+.lev-bull-card{border-left:3px solid var(--green);}
+.lev-bear-card{border-left:3px solid var(--red);}
+.lev-vix-card{border-left:3px solid var(--orange);}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.cticker{font-size:15px;font-weight:700;color:var(--text);}
+.cicons{display:flex;gap:4px;}
+.cicons button{font-size:14px;padding:2px 4px;border-radius:4px;transition:.15s;opacity:.6;}
+.cicons button:hover{opacity:1;background:var(--card2);}
+.lev-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-bottom:4px;}
+.badge-bull{background:rgba(34,197,94,.2);color:var(--green);border:1px solid rgba(34,197,94,.4);}
+.badge-bear{background:rgba(239,68,68,.2);color:var(--red);border:1px solid rgba(239,68,68,.4);}
+.badge-vix{background:rgba(245,158,11,.2);color:var(--orange);border:1px solid rgba(245,158,11,.4);}
+.cname{font-size:11px;color:var(--dim);margin-bottom:6px;line-height:1.3;}
+.cprice{font-size:20px;font-weight:700;margin-bottom:4px;}
+.cchange{font-size:13px;font-weight:600;margin-bottom:6px;}
+.cchange.up{color:var(--green);}
+.cchange.dn{color:var(--red);}
+.cchange.flat{color:var(--dim);}
+canvas.spark{width:100%;height:50px;display:block;margin-bottom:6px;}
+.cdetails{font-size:11px;color:var(--dim);}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-msg{text-align:center;padding:60px 20px;color:var(--dim);}
+.heatmap{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;}
+.hm-cell{padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:default;min-width:90px;text-align:center;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;min-width:320px;max-width:90vw;animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.modal h3{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--text);}
+.modal label{font-size:13px;color:var(--dim);display:block;margin-bottom:4px;}
+.modal input{width:100%;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;margin-bottom:12px;}
+.modal-btns{display:flex;gap:8px;margin-top:4px;}
+.btn-primary{padding:8px 18px;background:var(--blue);color:#fff;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-secondary{padding:8px 18px;background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;}
+.btn-danger{padding:8px 18px;background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:14px;cursor:pointer;}
+table.ctbl{width:100%;border-collapse:collapse;margin-top:8px;}
+table.ctbl th{text-align:left;padding:8px 10px;font-size:12px;color:var(--dim);border-bottom:1px solid var(--border);}
+table.ctbl td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border);}
+footer{text-align:center;padding:20px 16px;color:var(--dim);font-size:11px;border-top:1px solid var(--border);margin-top:24px;}
+::-webkit-scrollbar{height:4px;width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 </style>
 </head>
 <body>
-
 <div id="hdr">
-  <div id="logo">📊 ETF 儀表板</div>
-  <div id="statusbar"></div>
+  <div id="logo">📊 ETF Dashboard</div>
+  <div id="ticker-bar"><span style="color:var(--dim)">載入中...</span></div>
   <div id="hdr-right">
-    <button class="hbtn" id="cmp-btn" onclick="toggleCompareMode()">⚖ 比較</button>
-    <button class="hbtn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+    <button class="hbtn" id="comparebtn">⚖ 比較</button>
+    <button class="hbtn" id="darkbtn" onclick="toggleDark()">☀ 亮色</button>
+    <button class="hbtn" onclick="fetchAll()">↻ 刷新</button>
   </div>
 </div>
-
 <div id="tabbar"></div>
-
-<div id="main">
-  <div id="rbar">
-    <span id="rtime">載入中...</span>
-    <div id="prog"><div id="pfill"></div></div>
-    <button class="hbtn" onclick="forceRefresh()">↻ 更新</button>
-  </div>
-  <div id="content"></div>
-</div>
-
-<div id="alert-modal">
-  <div class="mbox">
-    <div class="mtitle"><span>🔔 價格提醒 — <span id="am-ticker"></span></span><button class="mclose" onclick="closeAlertModal()">×</button></div>
-    <div class="mrow"><div class="mlabel">高於此價格時提醒</div><input class="minput" id="am-hi" type="number" placeholder="例如 500.00"></div>
-    <div class="mrow"><div class="mlabel">低於此價格時提醒</div><input class="minput" id="am-lo" type="number" placeholder="例如 400.00"></div>
-    <button class="mbtn mbtn-p" onclick="saveAlert()">儲存提醒</button>
-    <button class="mbtn mbtn-d" onclick="clearAlert()">清除提醒</button>
-  </div>
-</div>
-
-<div id="compare-modal">
-  <div class="mbox">
-    <div class="mtitle"><span>📊 ETF 比較</span><button class="mclose" onclick="closeCompare()">×</button></div>
-    <div id="cmp-content"></div>
-  </div>
-</div>
-
-<div id="cmpbar">
-  <span id="cmpbar-txt">已選 0 個</span>
-  <button class="cmpbarbtn" onclick="showCompareModal()">📊 比較</button>
-  <button class="cmpbarbtn" onclick="clearSelected()">✕ 清除</button>
-</div>
-
-<script>
-const CACHE_KEY='etf_dash_v2_cache';
-const ALERT_KEY='etf_dash_alerts';
-const WL_KEY='etf_dash_watchlist';
-const PREFS_KEY='etf_dash_prefs';
-
-const ETFS={
-  SPY:{n:'SPDR S&P 500 ETF',c:'美股指數'},QQQ:{n:'Invesco Nasdaq 100 ETF',c:'美股指數'},
-  DIA:{n:'SPDR Dow Jones ETF',c:'美股指數'},IWM:{n:'iShares Russell 2000 ETF',c:'美股指數'},
-  VTI:{n:'Vanguard Total Stock Market ETF',c:'美股指數'},VOO:{n:'Vanguard S&P 500 ETF',c:'美股指數'},
-  SMH:{n:'VanEck Semiconductor ETF',c:'半導體'},SOXX:{n:'iShares Semiconductor ETF',c:'半導體'},
-  XSD:{n:'SPDR S&P Semiconductor ETF',c:'半導體'},PSI:{n:'Invesco Dynamic Semiconductors ETF',c:'半導體'},
-  SOXQ:{n:'Invesco PHLX Semiconductor ETF',c:'半導體'},
-  BOTZ:{n:'Global X Robotics & AI ETF',c:'AI 相關'},AIQ:{n:'Global X AI & Technology ETF',c:'AI 相關'},
-  ROBT:{n:'First Trust Nasdaq AI & Robotics ETF',c:'AI 相關'},IRBO:{n:'iShares Robotics & AI ETF',c:'AI 相關'},
-  CHAT:{n:'Roundhill Generative AI & Technology ETF',c:'AI 相關'},AIPI:{n:'REX AI Equity Premium Income ETF',c:'AI 相關'},
-  IGV:{n:'iShares Expanded Tech-Software ETF',c:'AI 基建'},CLOU:{n:'Global X Cloud Computing ETF',c:'AI 基建'},
-  WCLD:{n:'WisdomTree Cloud Computing ETF',c:'AI 基建'},SKYY:{n:'First Trust Cloud Computing ETF',c:'AI 基建'},
-  HACK:{n:'ETFMG Prime Cyber Security ETF',c:'AI 基建'},CIBR:{n:'First Trust Cybersecurity ETF',c:'AI 基建'},
-  ITA:{n:'iShares US Aerospace & Defense ETF',c:'軍工'},PPA:{n:'Invesco Aerospace & Defense ETF',c:'軍工'},
-  XAR:{n:'SPDR S&P Aerospace & Defense ETF',c:'軍工'},DFEN:{n:'Direxion Aerospace & Defense 3X',c:'軍工'},
-  SHLD:{n:'Global X Defense Tech ETF',c:'軍工'},FITE:{n:'ProShares USD Defense ETF',c:'軍工'},
-  XBI:{n:'SPDR S&P Biotech ETF',c:'生物科技'},IBB:{n:'iShares Biotech ETF',c:'生物科技'},
-  BBC:{n:'Virtus LifeSci Biotech Clinical Trials ETF',c:'生物科技'},ARKG:{n:'ARK Genomic Revolution ETF',c:'生物科技'},
-  LABU:{n:'Direxion Biotech Bull 3X',c:'生物科技'},BIB:{n:'ProShares Ultra Nasdaq Biotech 2X',c:'生物科技'},
-  URA:{n:'Global X Uranium ETF',c:'核電'},URNM:{n:'Sprott Uranium Miners ETF',c:'核電'},
-  NLR:{n:'VanEck Uranium+Nuclear Energy ETF',c:'核電'},NUKZ:{n:'Range Nuclear Renaissance ETF',c:'核電'},
-  REMX:{n:'VanEck Rare Earth/Strategic Metals ETF',c:'稀土'},PICK:{n:'iShares MSCI Global Metals & Mining ETF',c:'稀土'},
-  SLX:{n:'VanEck Steel ETF',c:'稀土'},XME:{n:'SPDR S&P Metals & Mining ETF',c:'稀土'},
-  XLU:{n:'Utilities Select Sector SPDR ETF',c:'電力基建'},VPU:{n:'Vanguard Utilities ETF',c:'電力基建'},
-  IDU:{n:'iShares US Utilities ETF',c:'電力基建'},GRID:{n:'First Trust NASDAQ Clean Edge Smart Grid ETF',c:'電力基建'},
-  POWR:{n:'Advisors Inner Circle REGI ETF',c:'電力基建'},
-  GLD:{n:'SPDR Gold Shares ETF',c:'貴金屬'},IAU:{n:'iShares Gold Trust',c:'貴金屬'},
-  GDX:{n:'VanEck Gold Miners ETF',c:'貴金屬'},GDXJ:{n:'VanEck Junior Gold Miners ETF',c:'貴金屬'},
-  SLV:{n:'iShares Silver Trust',c:'貴金屬'},SIVR:{n:'abrdn Physical Silver Shares ETF',c:'貴金屬'},
-  SIL:{n:'Global X Silver Miners ETF',c:'貴金屬'},CPER:{n:'United States Copper Index Fund',c:'貴金屬'},
-  COPX:{n:'Global X Copper Miners ETF',c:'貴金屬'},
-  TQQQ:{n:'ProShares UltraPro QQQ 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  SOXL:{n:'Direxion Semiconductor Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  UPRO:{n:'ProShares UltraPro S&P500 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  FNGU:{n:'MicroSectors FANG+ 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  SPXL:{n:'Direxion S&P500 Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  LABU2:{ticker:'LABU',n:'Direxion Biotech Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  DFEN2:{ticker:'DFEN',n:'Direxion Aerospace Defense 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  CURE:{n:'Direxion Healthcare Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  FAS:{n:'Direxion Financial Bull 3X',c:'槓桿 ETF',lev:'3x Bull',lc:'#22c55e'},
-  UVXY:{n:'ProShares Ultra VIX Short-Term 1.5X',c:'槓桿 ETF',lev:'1.5x VIX',lc:'#f59e0b'},
-  SQQQ:{n:'ProShares UltraPro Short QQQ 3X',c:'槓桿 ETF',lev:'3x Bear',lc:'#ef4444'},
-  SPXS:{n:'Direxion S&P500 Bear 3X',c:'槓桿 ETF',lev:'3x Bear',lc:'#ef4444'},
-  SRTY:{n:'Direxion Russell 2000 Bear 3X',c:'槓桿 ETF',lev:'3x Bear',lc:'#ef4444'}
-};
-
-// Resolve actual ticker symbol
-function tkr(k){return ETFS[k]&&ETFS[k].ticker?ETFS[k].ticker:k;}
-
-const TABS=[
-  {id:'overview',label:'總覽'},
-  {id:'leverage',label:'槓桿 ETF'},
-  {id:'us-index',label:'美股指數'},
-  {id:'semi',label:'半導體'},
-  {id:'ai',label:'AI 相關'},
-  {id:'ai-infra',label:'AI 基建'},
-  {id:'defense',label:'軍工'},
-  {id:'biotech',label:'生物科技'},
-  {id:'nuclear',label:'核電'},
-  {id:'rareearth',label:'稀土'},
-  {id:'utilities',label:'電力基建'},
-  {id:'metals',label:'貴金屬'},
-  {id:'heatmap',label:'熱力圖'},
-  {id:'watchlist',label:'⭐ 自選'}
-];
-
-const TAB_ETFS={
-  'leverage':['TQQQ','SOXL','UPRO','FNGU','SPXL','LABU2','DFEN2','CURE','FAS','UVXY','SQQQ','SPXS','SRTY'],
-  'us-index':['SPY','QQQ','DIA','IWM','VTI','VOO'],
-  'semi':['SMH','SOXX','XSD','PSI','SOXQ'],
-  'ai':['BOTZ','AIQ','ROBT','IRBO','CHAT','AIPI'],
-  'ai-infra':['IGV','CLOU','WCLD','SKYY','HACK','CIBR'],
-  'defense':['ITA','PPA','XAR','DFEN','SHLD','FITE'],
-  'biotech':['XBI','IBB','BBC','ARKG','LABU','BIB'],
-  'nuclear':['URA','URNM','NLR','NUKZ'],
-  'rareearth':['REMX','PICK','SLX','XME'],
-  'utilities':['XLU','VPU','IDU','GRID','POWR'],
-  'metals':['GLD','IAU','GDX','GDXJ','SLV','SIVR','SIL','CPER','COPX']
-};
-
-const OVERVIEW_CATS=[
-  {label:'美股指數',etfs:['SPY','QQQ','IWM']},
-  {label:'槓桿 ETF',etfs:['TQQQ','SOXL','SQQQ']},
-  {label:'半導體',etfs:['SMH','SOXX']},
-  {label:'AI 相關',etfs:['BOTZ','AIQ']},
-  {label:'AI 基建',etfs:['IGV','CLOU']},
-  {label:'軍工',etfs:['ITA','PPA']},
-  {label:'生物科技',etfs:['XBI','IBB']},
-  {label:'核電',etfs:['URA','URNM']},
-  {label:'稀土',etfs:['REMX','XME']},
-  {label:'電力基建',etfs:['XLU','GRID']},
-  {label:'貴金屬',etfs:['GLD','GDX','SLV']}
-];
-
-// All unique tickers to fetch
-const ALL_TICKERS=[...new Set(Object.keys(ETFS).map(tkr))];
-
-let cache={};
-let alerts={};
-let watchlist=new Set();
-let compareMode=false;
-let selected=new Set();
-let currentTab='overview';
-let refreshTimer=null;
-let progTimer=null;
-let progStart=0;
-
-// Load prefs
-(function(){
-  try{
-    const p=JSON.parse(localStorage.getItem(PREFS_KEY)||'{}');
-    if(p.theme==='light')document.body.classList.add('light');
-    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');
-    const now=Date.now();
-    Object.entries(c).forEach(([k,v])=>{if(v.ts&&(now-v.ts)<86400000)cache[k]=v;});
-    alerts=JSON.parse(localStorage.getItem(ALERT_KEY)||'{}');
-    const wl=JSON.parse(localStorage.getItem(WL_KEY)||'[]');
-    watchlist=new Set(wl);
-  }catch(e){}
-})();
-
-function savePrefs(k,v){
-  try{const p=JSON.parse(localStorage.getItem(PREFS_KEY)||'{}');p[k]=v;localStorage.setItem(PREFS_KEY,JSON.stringify(p));}catch(e){}
-}
-function saveAlerts(){try{localStorage.setItem(ALERT_KEY,JSON.stringify(alerts));}catch(e){}}
-function saveWatchlist(){try{localStorage.setItem(WL_KEY,JSON.stringify([...watchlist]));}catch(e){}}
-function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(cache));}catch(e){}}
-
-// Theme toggle
-function toggleTheme(){
-  const isLight=document.body.classList.toggle('light');
-  document.getElementById('theme-btn').textContent=isLight?'☀️':'🌙';
-  savePrefs('theme',isLight?'light':'dark');
-}
-
-// Tab rendering
-function renderTabs(){
-  const tb=document.getElementById('tabbar');
-  tb.innerHTML=TABS.map(t=>`<div class="tab${t.id===currentTab?' active':''}" onclick="switchTab('${t.id}')">${t.label}</div>`).join('');
-}
-
-function switchTab(id){
-  currentTab=id;
-  renderTabs();
-  renderContent();
-}
-
-// STATUS BAR
-function updateStatusBar(){
-  const sb=document.getElementById('statusbar');
-  const tickers=['SPY','QQQ','SMH','GLD'];
-  const items=tickers.map(t=>{
-    const d=cache[t];
-    if(!d)return`<div class="sbi"><span class="sbt">${t}</span><span class="sbp">—</span></div>`;
-    const chg=d.price&&d.prev?(((d.price-d.prev)/d.prev)*100).toFixed(2):null;
-    const cls=chg>0?'up':chg<0?'dn':'nc';
-    return`<div class="sbi"><span class="sbt">${t}</span><span class="sbp">${d.price?d.price.toFixed(2):'—'}</span><span class="${cls}" style="font-size:11px">${chg!=null?(chg>0?'+':'')+chg+'%':''}</span></div>`;
-  }).join('');
-  sb.innerHTML=items;
-}
-
-// ETF CARD
-function levBadge(key){
-  const e=ETFS[key];
-  if(!e||!e.lev)return'';
-  if(e.lev.includes('Bull'))return`<div class="lev-badge lbull">${e.lev}</div>`;
-  if(e.lev.includes('Bear'))return`<div class="lev-badge lbear">${e.lev}</div>`;
-  return`<div class="lev-badge lvix">${e.lev}</div>`;
-}
-
-function levCardClass(key){
-  const e=ETFS[key];
-  if(!e||!e.lev)return'';
-  if(e.lev.includes('Bull'))return' lev-bull-card';
-  if(e.lev.includes('Bear'))return' lev-bear-card';
-  return' lev-vix-card';
-}
-
-function buildCard(key){
-  const sym=tkr(key);
-  const meta=ETFS[key]||{n:sym,c:''};
-  const d=cache[sym]||{};
-  const price=d.price;
-  const prev=d.prev;
-  const chg=price&&prev?price-prev:null;
-  const pct=chg&&prev?(chg/prev*100):null;
-  const cls=pct>0?'up':pct<0?'dn':'nc';
-  const sign=pct>0?'+':'';
-  const hasAlert=alerts[sym]&&(alerts[sym].hi||alerts[sym].lo);
-  const inWL=watchlist.has(sym);
-  const isSelected=selected.has(key);
-  const ms=d.state||'';
-  const cardCls=`card${levCardClass(key)}${isSelected?' selected':''}${hasAlert&&checkAlertBreach(sym)?' alert-active':''}`;
-
-  const vol=d.vol?formatVol(d.vol):'—';
-  const hi=d.hi?d.hi.toFixed(2):'—';
-  const lo=d.lo?d.lo.toFixed(2):'—';
-
-  return`<div class="${cardCls}" id="card-${key}" onclick="cardClick('${key}')">
-  <div class="mstate ms-${ms}"></div>
-  <div class="ch">
-    <div class="cticker">${sym}</div>
-    <div class="cicons" onclick="event.stopPropagation()">
-      <button class="cicon${inWL?' staron':''}" title="自選" onclick="toggleWatchlist('${sym}')">${inWL?'⭐':'☆'}</button>
-      <button class="cicon${hasAlert?' alerton':''}" title="設置提醒" onclick="openAlertModal('${sym}')">${hasAlert?'🔔':'🔕'}</button>
+<div id="main"></div>
+<div class="modal-overlay" id="alert-modal">
+  <div class="modal">
+    <h3>🔔 設定價格警報 — <span id="alert-ticker-lbl"></span></h3>
+    <label>上限警報 (High Alert)</label>
+    <input id="alert-hi" type="number" step="0.01" placeholder="留空=不設定">
+    <label>下限警報 (Low Alert)</label>
+    <input id="alert-lo" type="number" step="0.01" placeholder="留空=不設定">
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="saveAlert()">儲存</button>
+      <button class="btn-danger" onclick="clearAlert()">清除</button>
+      <button class="btn-secondary" onclick="closeAlertModal()">取消</button>
     </div>
   </div>
-  ${levBadge(key)}
-  <div class="cname">${meta.n}</div>
-  <div class="cprice ${cls}">${price?'$'+price.toFixed(2):'載入中...'}</div>
-  <div class="cchange ${cls}">${pct!=null?sign+pct.toFixed(2)+'% ('+sign+chg.toFixed(2)+')':'—'}</div>
-  <div class="sparkwrap"><canvas class="spark" id="sp-${key}"></canvas></div>
-  <div class="cdetails">
-    <span class="cdl">最高</span><span class="cdv">${hi}</span>
-    <span class="cdl">最低</span><span class="cdv">${lo}</span>
-    <span class="cdl">成交量</span><span class="cdv">${vol}</span>
-    <span class="cdl">幣種</span><span class="cdv">${d.currency||'USD'}</span>
+</div>
+<div class="modal-overlay" id="compare-modal">
+  <div class="modal" style="min-width:500px;max-width:95vw;">
+    <h3>⚖ ETF 比較</h3>
+    <div id="compare-content"></div>
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="btn-secondary" onclick="closeCompareModal()">關閉</button>
+      <button class="btn-danger" onclick="clearCompare()">清除選擇</button>
+    </div>
   </div>
-</div>`;
-}
+</div>
+<footer>數據來源：Yahoo Finance | 自動每 60 秒更新 | 僅供參考，非投資建議 | Built with Nebula AI</footer>
+<script>
+const TABS=[
+  {id:'overview',label:'總覽',tickers:['SPY','QQQ','SMH','TQQQ','SOXL','BOTZ','ITA','XBI','URA','GLD']},
+  {id:'leverage',label:'槓桿 ETF',tickers:['TQQQ','SOXL','UPRO','FNGU','SPXL','LABU','DFEN','CURE','FAS','UVXY','SQQQ','SPXS','SRTY']},
+  {id:'us-index',label:'美股指數',tickers:['SPY','QQQ','DIA','IWM','VTI','VOO']},
+  {id:'semi',label:'半導體',tickers:['SMH','SOXX','XSD','PSI','SOXQ']},
+  {id:'ai',label:'AI 相關',tickers:['BOTZ','AIQ','ROBT','IRBO','CHAT','AIPI']},
+  {id:'ai-infra',label:'AI 基建',tickers:['IGV','CLOU','WCLD','SKYY','HACK','CIBR']},
+  {id:'defense',label:'軍工',tickers:['ITA','PPA','XAR','DFEN','SHLD','FITE']},
+  {id:'biotech',label:'生物科技',tickers:['XBI','IBB','ARKG','LABU','BIB']},
+  {id:'nuclear',label:'核電',tickers:['URA','URNM','NLR','NUKZ']},
+  {id:'rare-earth',label:'稀土',tickers:['REMX','PICK','SLX','XME']},
+  {id:'utilities',label:'電力基建',tickers:['XLU','VPU','IDU','GRID','POWR']},
+  {id:'metals',label:'貴金屬',tickers:['GLD','IAU','GDX','GDXJ','SLV','COPX']},
+  {id:'heatmap',label:'熱力圖',tickers:[]},
+  {id:'watchlist',label:'我的自選',tickers:[]}
+];
+const META={
+  TQQQ:{n:'ProShares UltraPro QQQ',cat:'槓桿 ETF',lev:'3x Bull'},
+  SOXL:{n:'Direxion Semi Bull 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  UPRO:{n:'ProShares UltraPro S&P500',cat:'槓桿 ETF',lev:'3x Bull'},
+  FNGU:{n:'MicroSectors FANG+ 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  SPXL:{n:'Direxion S&P500 Bull 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  LABU:{n:'Direxion Biotech Bull 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  DFEN:{n:'Direxion Aerospace 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  CURE:{n:'Direxion Healthcare Bull 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  FAS:{n:'Direxion Financial Bull 3X',cat:'槓桿 ETF',lev:'3x Bull'},
+  UVXY:{n:'ProShares Ultra VIX 1.5X',cat:'槓桿 ETF',lev:'1.5x VIX'},
+  SQQQ:{n:'ProShares UltraPro Short QQQ',cat:'槓桿 ETF',lev:'3x Bear'},
+  SPXS:{n:'Direxion S&P500 Bear 3X',cat:'槓桿 ETF',lev:'3x Bear'},
+  SRTY:{n:'Direxion Russell 2000 Bear 3X',cat:'槓桿 ETF',lev:'3x Bear'},
+  SPY:{n:'SPDR S&P 500 ETF',cat:'美股指數'},
+  QQQ:{n:'Invesco QQQ Nasdaq-100',cat:'美股指數'},
+  DIA:{n:'SPDR Dow Jones',cat:'美股指數'},
+  IWM:{n:'iShares Russell 2000',cat:'美股指數'},
+  VTI:{n:'Vanguard Total Stock',cat:'美股指數'},
+  VOO:{n:'Vanguard S&P 500',cat:'美股指數'},
+  SMH:{n:'VanEck Semiconductor',cat:'半導體'},
+  SOXX:{n:'iShares Semiconductor',cat:'半導體'},
+  XSD:{n:'SPDR S&P Semiconductor',cat:'半導體'},
+  PSI:{n:'Invesco Semiconductor',cat:'半導體'},
+  SOXQ:{n:'Invesco PHLX Semi',cat:'半導體'},
+  BOTZ:{n:'Global X Robotics & AI',cat:'AI 相關'},
+  AIQ:{n:'Global X AI & Tech',cat:'AI 相關'},
+  ROBT:{n:'First Trust AI & Robotics',cat:'AI 相關'},
+  IRBO:{n:'iShares Robotics & AI',cat:'AI 相關'},
+  CHAT:{n:'Roundhill Generative AI',cat:'AI 相關'},
+  AIPI:{n:'REX AI Equity Premium',cat:'AI 相關'},
+  IGV:{n:'iShares Tech-Software',cat:'AI 基建'},
+  CLOU:{n:'Global X Cloud',cat:'AI 基建'},
+  WCLD:{n:'WisdomTree Cloud',cat:'AI 基建'},
+  SKYY:{n:'First Trust Cloud',cat:'AI 基建'},
+  HACK:{n:'ETFMG Cyber Security',cat:'AI 基建'},
+  CIBR:{n:'First Trust Cybersecurity',cat:'AI 基建'},
+  ITA:{n:'iShares Aerospace & Defense',cat:'軍工'},
+  PPA:{n:'Invesco Aerospace & Defense',cat:'軍工'},
+  XAR:{n:'SPDR Aerospace & Defense',cat:'軍工'},
+  SHLD:{n:'Global X Defense Tech',cat:'軍工'},
+  FITE:{n:'SPDR Future Security',cat:'軍工'},
+  XBI:{n:'SPDR S&P Biotech',cat:'生物科技'},
+  IBB:{n:'iShares Biotechnology',cat:'生物科技'},
+  ARKG:{n:'ARK Genomic Revolution',cat:'生物科技'},
+  BIB:{n:'ProShares Ultra Biotech',cat:'生物科技'},
+  URA:{n:'Global X Uranium',cat:'核電'},
+  URNM:{n:'Sprott Uranium Miners',cat:'核電'},
+  NLR:{n:'VanEck Uranium+Nuclear',cat:'核電'},
+  NUKZ:{n:'Range Nuclear Renaissance',cat:'核電'},
+  REMX:{n:'VanEck Rare Earth',cat:'稀土'},
+  PICK:{n:'iShares Metals & Mining',cat:'稀土'},
+  SLX:{n:'VanEck Steel',cat:'稀土'},
+  XME:{n:'SPDR Metals & Mining',cat:'稀土'},
+  XLU:{n:'Utilities Select Sector',cat:'電力基建'},
+  VPU:{n:'Vanguard Utilities',cat:'電力基建'},
+  IDU:{n:'iShares US Utilities',cat:'電力基建'},
+  GRID:{n:'First Trust Smart Grid',cat:'電力基建'},
+  POWR:{n:'iShares Power Infrastructure',cat:'電力基建'},
+  GLD:{n:'SPDR Gold Shares',cat:'貴金屬'},
+  IAU:{n:'iShares Gold Trust',cat:'貴金屬'},
+  GDX:{n:'VanEck Gold Miners',cat:'貴金屬'},
+  GDXJ:{n:'VanEck Jr Gold Miners',cat:'貴金屬'},
+  SLV:{n:'iShares Silver Trust',cat:'貴金屬'},
+  COPX:{n:'Global X Copper Miners',cat:'貴金屬'}
+};
+const etfData={};
+const watchlist=new Set(JSON.parse(localStorage.getItem('etf_wl')||'[]'));
+const alerts=JSON.parse(localStorage.getItem('etf_alerts')||'{}');
+const compareSet=new Set();
+let compareMode=false;
+let activeTab='overview';
+let darkMode=localStorage.getItem('etf_dark')!=='false';
+let alertTicker='';
+let loadedCount=0;
+let totalCount=0;
+const ALL_TICKERS=[...new Set(TABS.flatMap(t=>t.tickers))];
 
-function formatVol(v){
-  if(v>=1e9)return(v/1e9).toFixed(1)+'B';
-  if(v>=1e6)return(v/1e6).toFixed(1)+'M';
-  if(v>=1e3)return(v/1e3).toFixed(1)+'K';
-  return v;
-}
+function fmt(v,d=2){return v==null?'--':(+v).toFixed(d);}
+function fmtVol(v){if(!v)return '--';if(v>=1e9)return(v/1e9).toFixed(1)+'B';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(0)+'K';return String(v);}
 
-function checkAlertBreach(sym){
-  const a=alerts[sym];const d=cache[sym];
-  if(!a||!d||!d.price)return false;
-  return(a.hi&&d.price>=a.hi)||(a.lo&&d.price<=a.lo);
-}
+function getLevClass(t){const m=META[t];if(!m||!m.lev)return'';if(m.lev==='3x Bull')return'lev-bull-card';if(m.lev==='3x Bear')return'lev-bear-card';if(m.lev==='1.5x VIX')return'lev-vix-card';return'';}
+function getLevBadge(t){const m=META[t];if(!m||!m.lev)return'';if(m.lev==='3x Bull')return'<span class="lev-badge badge-bull">3x Bull</span>';if(m.lev==='3x Bear')return'<span class="lev-badge badge-bear">3x Bear</span>';if(m.lev==='1.5x VIX')return'<span class="lev-badge badge-vix">1.5x VIX</span>';return'';}
 
-// RENDER CONTENT
-function renderContent(){
-  const el=document.getElementById('content');
-  if(currentTab==='heatmap'){renderHeatmap();return;}
-  if(currentTab==='watchlist'){renderWatchlist();return;}
-  if(currentTab==='overview'){renderOverview();return;}
-  const keys=TAB_ETFS[currentTab]||[];
-  el.innerHTML=`<div class="grid">${keys.map(buildCard).join('')}</div>`;
-  keys.forEach(k=>drawSparkline(k));
-}
-
-function renderOverview(){
-  const el=document.getElementById('content');
-  let html='';
-  OVERVIEW_CATS.forEach(cat=>{
-    html+=`<div class="sec-h">${cat.label}<span class="sec-tag">${cat.etfs.length} ETF</span></div>`;
-    html+=`<div class="grid">${cat.etfs.map(buildCard).join('')}</div>`;
-  });
-  el.innerHTML=html;
-  OVERVIEW_CATS.forEach(cat=>cat.etfs.forEach(k=>drawSparkline(k)));
-}
-
-function renderWatchlist(){
-  const el=document.getElementById('content');
-  if(watchlist.size===0){
-    el.innerHTML=`<div class="empty"><div class="empty-i">⭐</div><div>尚未加入自選股</div><div style="margin-top:8px;font-size:12px;color:var(--dim)">點擊各 ETF 卡片上的 ☆ 圖示加入自選</div></div>`;
-    return;
+function renderCard(ticker){
+  const d=etfData[ticker]||{};
+  const m=META[ticker]||{n:ticker,cat:''};
+  const lc=getLevClass(ticker);
+  const inWL=watchlist.has(ticker);
+  const isAlert=d.alertActive?'alert-active':'';
+  const priceHtml=d.price!=null?'$'+fmt(d.price):'<span class="spin"></span>';
+  let chgHtml='<div class="cchange flat">--</div>';
+  if(d.change!=null){
+    const cls=d.change>0?'up':d.change<0?'dn':'flat';
+    const s=d.change>0?'+':'';
+    chgHtml='<div class="cchange '+cls+'">'+s+fmt(d.change)+' ('+s+fmt(d.changePct)+'%)</div>';
   }
-  const keys=[...watchlist];
-  el.innerHTML=`<div class="grid">${keys.map(k=>{
-    const key=Object.keys(ETFS).find(ek=>tkr(ek)===k)||k;
-    return buildCard(key);
-  }).join('')}</div>`;
-  keys.forEach(k=>{const key=Object.keys(ETFS).find(ek=>tkr(ek)===k)||k;drawSparkline(key);});
+  const det='H:'+fmt(d.high)+' | L:'+fmt(d.low)+' | Vol:'+fmtVol(d.vol);
+  const star=inWL?'⭐':'☆';
+  return '<div class="card '+lc+' '+isAlert+'" data-ticker="'+ticker+'" onclick="cardClick(this,\''+ticker+'\')">'
+    +'<div class="ch"><span class="cticker">'+ticker+'</span>'
+    +'<div class="cicons">'
+    +'<button onclick="toggleWatch(event,\''+ticker+'\')" title="自選">'+star+'</button>'
+    +'<button onclick="openAlert(event,\''+ticker+'\')" title="警報">🔔</button>'
+    +'</div></div>'
+    +getLevBadge(ticker)
+    +'<div class="cname">'+m.n+'</div>'
+    +'<div class="cprice">'+priceHtml+'</div>'
+    +chgHtml
+    +'<canvas class="spark" data-t="'+ticker+'" width="200" height="50"></canvas>'
+    +'<div class="cdetails">'+det+'</div>'
+    +'</div>';
 }
 
-function renderHeatmap(){
-  const el=document.getElementById('content');
-  const allKeys=Object.keys(ETFS).filter(k=>!k.endsWith('2'));
-  let html=`<div id="heatmap-wrap"><div style="color:var(--dim);font-size:12px;margin-bottom:10px">顏色深淺代表漲跌幅度 — 點擊查看詳情</div><div id="hm-grid">`;
-  allKeys.forEach(k=>{
-    const sym=tkr(k);const d=cache[sym]||{};
-    const pct=d.price&&d.prev?(d.price-d.prev)/d.prev*100:null;
-    const bg=pct!=null?heatColor(pct):'#374151';
-    html+=`<div class="hmc" style="background:${bg}" onclick="alert('${sym}: '+(${pct!=null?pct.toFixed(2):0})+'%')">
-      <div class="hmt">${sym}</div>
-      <div class="hmp">${pct!=null?(pct>0?'+':'')+pct.toFixed(2)+'%':'—'}</div>
-    </div>`;
-  });
-  html+='</div></div>';
-  el.innerHTML=html;
-}
-
-function heatColor(pct){
-  const v=Math.min(Math.abs(pct)/5,1);
-  if(pct>0){const g=Math.round(80+175*v);return`rgb(0,${g},60)`;}
-  else{const r=Math.round(80+175*v);return`rgb(${r},0,0)`;}
-}
-
-// SPARKLINES
-function drawSparkline(key){
-  const sym=tkr(key);
-  const d=cache[sym];
-  const canvas=document.getElementById('sp-'+key);
-  if(!canvas)return;
-  const closes=d&&d.closes?d.closes.filter(x=>x!=null):[];
-  const ctx=canvas.getContext('2d');
-  const W=canvas.offsetWidth||230;const H=60;
+function drawSparkline(canvas,closes,isUp){
+  const vals=closes.filter(v=>v!=null&&!isNaN(v));
+  if(vals.length<2)return;
+  const W=canvas.offsetWidth||200,H=50;
   canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
   ctx.clearRect(0,0,W,H);
-  if(closes.length<2){
-    ctx.fillStyle='var(--dim)';
-    ctx.font='11px sans-serif';
-    ctx.textAlign='center';
-    ctx.fillText('暫無數據',W/2,H/2);
-    return;
-  }
-  const mn=Math.min(...closes),mx=Math.max(...closes);
-  const rng=mx-mn||1;
-  const pts=closes.map((v,i)=>({x:i/(closes.length-1)*W,y:H-((v-mn)/rng)*(H-10)-4}));
-  const up=closes[closes.length-1]>=closes[0];
-  const color=up?'#22c55e':'#ef4444';
+  const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+  const pts=vals.map((v,i)=>({x:i*(W/(vals.length-1)),y:H-((v-mn)/rng)*(H-6)-3}));
+  const color=isUp?'#22c55e':'#ef4444';
   const grad=ctx.createLinearGradient(0,0,0,H);
-  grad.addColorStop(0,up?'rgba(34,197,94,.25)':'rgba(239,68,68,.25)');
+  grad.addColorStop(0,isUp?'rgba(34,197,94,.4)':'rgba(239,68,68,.4)');
   grad.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
   pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
   ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
   ctx.fillStyle=grad;ctx.fill();
-  ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
   pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
-  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.stroke();
 }
 
-// CARD CLICK
-function cardClick(key){
-  if(compareMode){
-    if(selected.has(key)){selected.delete(key);}
-    else if(selected.size<4){selected.add(key);}
-    updateCmpBar();
-    const cardEl=document.getElementById('card-'+key);
-    if(cardEl){cardEl.classList.toggle('selected',selected.has(key));}
-    return;
+function drawAllSparklines(){
+  document.querySelectorAll('canvas.spark').forEach(c=>{
+    const t=c.dataset.t,d=etfData[t];
+    if(d&&d.closes&&d.closes.length>=2)drawSparkline(c,d.closes,d.change>=0);
+  });
+}
+
+function renderTab(tabId){
+  const main=document.getElementById('main');
+  if(tabId==='heatmap'){main.innerHTML=renderHeatmap();return;}
+  if(tabId==='watchlist'){
+    if(watchlist.size===0){main.innerHTML='<div class="empty-msg">尚未加入自選<br><small>點擊卡片上的 ☆ 加入自選清單</small></div>';return;}
+    main.innerHTML='<div class="grid">'+[...watchlist].map(renderCard).join('')+'</div>';
+    drawAllSparklines();return;
   }
+  const tab=TABS.find(t=>t.id===tabId);
+  if(!tab){main.innerHTML='';return;}
+  main.innerHTML='<div class="grid">'+tab.tickers.map(renderCard).join('')+'</div>';
+  drawAllSparklines();
 }
 
-function toggleCompareMode(){
-  compareMode=!compareMode;
-  const btn=document.getElementById('cmp-btn');
-  btn.classList.toggle('active',compareMode);
-  if(!compareMode){selected.clear();updateCmpBar();renderContent();}
-}
-
-function updateCmpBar(){
-  const bar=document.getElementById('cmpbar');
-  const txt=document.getElementById('cmpbar-txt');
-  if(selected.size>0&&compareMode){
-    bar.classList.add('show');
-    txt.textContent=`已選 ${selected.size} 個 ETF`;
-  }else{bar.classList.remove('show');}
-}
-
-function clearSelected(){selected.clear();updateCmpBar();renderContent();}
-
-function showCompareModal(){
-  if(selected.size<2){alert('請選擇至少 2 個 ETF');return;}
-  const keys=[...selected];
-  let rows='';
-  const fields=[['最新價','price',v=>v?'$'+v.toFixed(2):'—'],['前收市','prev',v=>v?'$'+v.toFixed(2):'—'],
-    ['漲跌幅','pct',v=>v!=null?(v>0?'+':'')+v.toFixed(2)+'%':'—'],
-    ['最高','hi',v=>v?'$'+v.toFixed(2):'—'],
-    ['最低','lo',v=>v?'$'+v.toFixed(2):'—'],
-    ['成交量','vol',v=>v?formatVol(v):'—']];
-  rows=fields.map(([label,field,fmt])=>{
-    const cells=keys.map(k=>{
-      const sym=tkr(k);const d=cache[sym]||{};
-      let val;
-      if(field==='pct'){val=d.price&&d.prev?(d.price-d.prev)/d.prev*100:null;}
-      else{val=d[field];}
-      const cls=field==='pct'?(val>0?'up':val<0?'dn':'nc'):'';
-      return`<td class="${cls}">${fmt(val)}</td>`;
-    }).join('');
-    return`<tr><td style="color:var(--dim)">${label}</td>${cells}</tr>`;
+function renderHeatmap(){
+  const cells=ALL_TICKERS.map(t=>{
+    const d=etfData[t]||{},pct=d.changePct||0;
+    const abs=Math.min(Math.abs(pct)/5,1);
+    let bg,tc;
+    if(pct>0){bg='rgba(34,197,94,'+(0.15+abs*0.6)+')';tc='#22c55e';}
+    else if(pct<0){bg='rgba(239,68,68,'+(0.15+abs*0.6)+')';tc='#ef4444';}
+    else{bg='rgba(136,146,168,0.15)';tc='var(--dim)';}
+    const s=pct>0?'+':'';
+    return '<div class="hm-cell" style="background:'+bg+';color:'+tc+'" title="'+(META[t]&&META[t].n||t)+'"><div style="font-size:13px;font-weight:700">'+t+'</div><div style="font-size:12px">'+(d.changePct!=null?s+fmt(pct)+'%':'--')+'</div></div>';
   }).join('');
-  const hdrs=keys.map(k=>`<th>${tkr(k)}</th>`).join('');
-  document.getElementById('cmp-content').innerHTML=`<div style="overflow-x:auto"><table class="cmptbl"><thead><tr><th>指標</th>${hdrs}</tr></thead><tbody>${rows}</tbody></table></div>`;
-  document.getElementById('compare-modal').classList.add('show');
+  return '<div style="margin-bottom:12px;color:var(--dim);font-size:13px">全部 '+ALL_TICKERS.length+' 支 ETF 漲跌幅熱力圖</div><div class="heatmap">'+cells+'</div>';
 }
 
-function closeCompare(){document.getElementById('compare-modal').classList.remove('show');}
-
-// WATCHLIST
-function toggleWatchlist(sym){
-  if(watchlist.has(sym)){watchlist.delete(sym);}else{watchlist.add(sym);}
-  saveWatchlist();
-  renderContent();
-  updateStatusBar();
+function buildTabs(){
+  document.getElementById('tabbar').innerHTML=TABS.map(t=>'<div class="tab'+(t.id===activeTab?' active':'')+'" onclick="switchTab(\''+t.id+'\')">'+t.label+'</div>').join('');
 }
 
-// ALERT MODAL
-let alertTarget=null;
-function openAlertModal(sym){
-  alertTarget=sym;
-  document.getElementById('am-ticker').textContent=sym;
-  const a=alerts[sym]||{};
-  document.getElementById('am-hi').value=a.hi||''
-  document.getElementById('am-lo').value=a.lo||''
-  document.getElementById('alert-modal').classList.add('show');
-}
-function closeAlertModal(){document.getElementById('alert-modal').classList.remove('show');alertTarget=null;}
-function saveAlert(){
-  if(!alertTarget)return;
-  const hi=parseFloat(document.getElementById('am-hi').value)||null;
-  const lo=parseFloat(document.getElementById('am-lo').value)||null;
-  if(hi||lo){alerts[alertTarget]={hi,lo};}else{delete alerts[alertTarget];}
-  saveAlerts();closeAlertModal();renderContent();
-}
-function clearAlert(){if(alertTarget){delete alerts[alertTarget];saveAlerts();}closeAlertModal();renderContent();}
+function switchTab(tabId){activeTab=tabId;buildTabs();renderTab(tabId);}
 
-// FETCH
-const PROXIES=[
-  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
-  u=>'https://api.allorigins.win/get?url='+encodeURIComponent(u)
-];
+function toggleDark(){
+  darkMode=!darkMode;
+  document.body.classList.toggle('light',!darkMode);
+  localStorage.setItem('etf_dark',darkMode);
+  document.getElementById('darkbtn').textContent=darkMode?'☀ 亮色':'🌙 暗色';
+}
 
-async function fetchTicker(sym){
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`;
-  for(let pi=0;pi<PROXIES.length;pi++){
-    try{
-      const res=await fetch(PROXIES[pi](url),{signal:AbortSignal.timeout(8000)});
-      if(!res.ok)continue;
-      let data=await res.json();
-      if(data.contents)data=JSON.parse(data.contents);
-      const meta=data?.chart?.result?.[0]?.meta;
-      const q=data?.chart?.result?.[0]?.indicators?.quote?.[0];
-      if(!meta)continue;
-      const closes=q?.close||[];
-      cache[sym]={
-        price:meta.regularMarketPrice,
-        prev:meta.previousClose||meta.chartPreviousClose,
-        hi:meta.regularMarketDayHigh,
-        lo:meta.regularMarketDayLow,
-        vol:meta.regularMarketVolume,
-        currency:meta.currency,
-        state:meta.marketState,
-        closes:closes.slice(-5),
-        ts:Date.now()
-      };
-      return true;
-    }catch(e){}
+function toggleWatch(e,ticker){
+  e.stopPropagation();
+  if(watchlist.has(ticker))watchlist.delete(ticker);else watchlist.add(ticker);
+  localStorage.setItem('etf_wl',JSON.stringify([...watchlist]));
+  renderTab(activeTab);
+}
+
+function cardClick(el,ticker){
+  if(!compareMode)return;
+  if(compareSet.has(ticker)){compareSet.delete(ticker);el.classList.remove('selected');}
+  else{compareSet.add(ticker);el.classList.add('selected');}
+  const btn=document.getElementById('comparebtn');
+  if(compareSet.size>=2){btn.textContent='⚖ 比較 ('+compareSet.size+')';btn.classList.add('active');}
+  else{btn.textContent='⚖ 比較模式';btn.classList.remove('active');}
+}
+
+function toggleCompare(){
+  compareMode=!compareMode;
+  const btn=document.getElementById('comparebtn');
+  if(!compareMode){
+    btn.classList.remove('active');btn.textContent='⚖ 比較';
+    compareSet.clear();document.querySelectorAll('.card.selected').forEach(c=>c.classList.remove('selected'));
+  } else {
+    btn.classList.add('active');btn.textContent='⚖ 比較模式';
   }
-  return false;
+}
+
+function openCompareModal(){
+  if(compareSet.size<2)return;
+  const rows=[...compareSet].map(t=>{
+    const d=etfData[t]||{};
+    const s=(d.changePct||0)>0?'+':'';
+    const cls=(d.changePct||0)>0?'up':(d.changePct||0)<0?'dn':'flat';
+    return '<tr><td><strong>'+t+'</strong><br><small style="color:var(--dim)">'+(META[t]&&META[t].n||'')+'</small></td><td>$'+fmt(d.price)+'</td><td class="cchange '+cls+'">'+s+fmt(d.changePct)+'%</td><td>$'+fmt(d.high)+'</td><td>$'+fmt(d.low)+'</td><td>'+fmtVol(d.vol)+'</td></tr>';
+  }).join('');
+  document.getElementById('compare-content').innerHTML='<table class="ctbl"><thead><tr><th>ETF</th><th>價格</th><th>漲跌%</th><th>最高</th><th>最低</th><th>成交量</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  document.getElementById('compare-modal').classList.add('open');
+}
+function closeCompareModal(){document.getElementById('compare-modal').classList.remove('open');}
+function clearCompare(){
+  compareSet.clear();
+  document.querySelectorAll('.card.selected').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('comparebtn').textContent='⚖ 比較';
+  document.getElementById('comparebtn').classList.remove('active');
+  closeCompareModal();
+}
+
+document.getElementById('comparebtn').addEventListener('click',()=>{
+  if(compareMode&&compareSet.size>=2)openCompareModal();else toggleCompare();
+});
+
+function openAlert(e,ticker){
+  e.stopPropagation();
+  alertTicker=ticker;
+  document.getElementById('alert-ticker-lbl').textContent=ticker;
+  document.getElementById('alert-hi').value=(alerts[ticker]&&alerts[ticker].hi)||'';
+  document.getElementById('alert-lo').value=(alerts[ticker]&&alerts[ticker].lo)||'';
+  document.getElementById('alert-modal').classList.add('open');
+}
+function closeAlertModal(){document.getElementById('alert-modal').classList.remove('open');alertTicker='';}
+function saveAlert(){
+  if(!alertTicker)return;
+  const hi=parseFloat(document.getElementById('alert-hi').value)||null;
+  const lo=parseFloat(document.getElementById('alert-lo').value)||null;
+  alerts[alertTicker]={hi,lo};
+  localStorage.setItem('etf_alerts',JSON.stringify(alerts));
+  closeAlertModal();renderTab(activeTab);
+}
+function clearAlert(){
+  if(!alertTicker)return;
+  delete alerts[alertTicker];
+  localStorage.setItem('etf_alerts',JSON.stringify(alerts));
+  closeAlertModal();renderTab(activeTab);
+}
+function checkAlerts(){
+  ALL_TICKERS.forEach(t=>{
+    const d=etfData[t];if(!d||d.price==null)return;
+    const al=alerts[t];if(!al)return;
+    const triggered=(al.hi&&d.price>=al.hi)||(al.lo&&d.price<=al.lo);
+    d.alertActive=!!triggered;
+    if(triggered&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
+      try{new Notification('ETF Alert: '+t,{body:'Price $'+fmt(d.price)+' triggered your alert'});}catch(e){}
+    }
+  });
+}
+
+document.getElementById('alert-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAlertModal();});
+document.getElementById('compare-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCompareModal();});
+
+const CACHE_KEY='etf_v3_cache';
+const CACHE_TTL=24*3600*1000;
+
+function loadCache(){
+  try{
+    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}'),now=Date.now(),out={};
+    Object.entries(c).forEach(([k,v])=>{if(now-v.ts<CACHE_TTL)out[k]=v.data;});
+    return out;
+  }catch{return{};}
+}
+function saveCache(ticker,data){
+  try{
+    const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');
+    c[ticker]={ts:Date.now(),data};
+    localStorage.setItem(CACHE_KEY,JSON.stringify(c));
+  }catch{}
+}
+
+async function fetchTicker(ticker){
+  const url='https://query1.finance.yahoo.com/v8/finance/chart/'+ticker+'?interval=1d&range=5d';
+  const proxy='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
+  try{
+    const r=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const meta=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
+    const quote=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].indicators&&j.chart.result[0].indicators.quote&&j.chart.result[0].indicators.quote[0];
+    if(!meta)throw new Error('no meta');
+    const closes=(quote&&quote.close||[]).filter(v=>v!=null);
+    const prev=meta.previousClose||meta.chartPreviousClose||(closes.length>1?closes[closes.length-2]:null);
+    const price=meta.regularMarketPrice||(closes.length?closes[closes.length-1]:null);
+    const change=(price!=null&&prev!=null)?price-prev:null;
+    const changePct=(change!=null&&prev)?change/prev*100:null;
+    const data={price,prevClose:prev,high:meta.regularMarketDayHigh,low:meta.regularMarketDayLow,vol:meta.regularMarketVolume,change,changePct,closes,marketState:meta.marketState,currency:meta.currency};
+    etfData[ticker]=data;saveCache(ticker,data);return data;
+  }catch{
+    const cached=loadCache()[ticker];
+    if(cached)etfData[ticker]=cached;
+    return null;
+  }
+}
+
+function updateTickerBar(){
+  const bar=document.getElementById('ticker-bar');
+  const keys=['SPY','QQQ','SMH','DIA','IWM'];
+  const items=keys.filter(t=>etfData[t]&&etfData[t].price!=null).map(t=>{
+    const d=etfData[t],s=d.change>0?'+':'',col=d.change>0?'#22c55e':d.change<0?'#ef4444':'#8892a8';
+    return '<span class="tb-item"><span class="sym">'+t+'</span><span style="color:var(--text)">$'+fmt(d.price)+'</span><span style="color:'+col+'">'+s+fmt(d.changePct)+'%</span></span>';
+  }).join('');
+  bar.innerHTML=items+'<span style="margin-left:auto;color:var(--dim);font-size:12px">已載入: '+loadedCount+'/'+totalCount+'</span>';
 }
 
 async function fetchAll(){
-  document.getElementById('rtime').innerHTML='<span class="spin"></span> 更新中...';
-  startProgress();
-  const unique=[...new Set(Object.keys(ETFS).map(tkr))];
-  const batchSize=3;
-  for(let i=0;i<unique.length;i+=batchSize){
-    const batch=unique.slice(i,i+batchSize);
-    await Promise.all(batch.map(fetchTicker));
-    updateStatusBar();
-    if(currentTab!=='watchlist'||watchlist.size>0)renderContent();
-    if(i+batchSize<unique.length)await sleep(800);
+  totalCount=ALL_TICKERS.length;loadedCount=0;
+  const cache=loadCache();
+  ALL_TICKERS.forEach(t=>{if(cache[t])etfData[t]=cache[t];});
+  renderTab(activeTab);updateTickerBar();
+  for(let i=0;i<ALL_TICKERS.length;i+=3){
+    const batch=ALL_TICKERS.slice(i,i+3);
+    await Promise.all(batch.map(t=>fetchTicker(t).then(()=>{loadedCount++;updateTickerBar();})));
+    if(i+3<ALL_TICKERS.length)await new Promise(r=>setTimeout(r,800));
   }
-  saveCache();
-  checkAllAlerts();
-  updateStatusBar();
-  renderContent();
-  const now=new Date();
-  document.getElementById('rtime').textContent=`上次更新：${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  checkAlerts();renderTab(activeTab);updateTickerBar();
 }
 
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-
-function startProgress(){
-  progStart=Date.now();
-  clearInterval(progTimer);
-  progTimer=setInterval(()=>{
-    const elapsed=Date.now()-progStart;
-    const pct=Math.min(elapsed/60000*100,99);
-    document.getElementById('pfill').style.width=pct+'%';
-  },500);
-  setTimeout(()=>{clearInterval(progTimer);document.getElementById('pfill').style.width='100%';},60500);
-}
-
-function checkAllAlerts(){
-  Object.keys(alerts).forEach(sym=>{
-    if(checkAlertBreach(sym)){
-      const a=alerts[sym];const d=cache[sym];
-      if('Notification'in window&&Notification.permission==='granted'){
-        new Notification(`ETF 提醒：${sym}`,{body:`目前價格 $${d.price.toFixed(2)} 已觸發提醒`});
-      }
-    }
-  });
-  if('Notification'in window&&Notification.permission==='default'){Notification.requestPermission();}
-}
-
-function forceRefresh(){
-  clearTimeout(refreshTimer);
-  fetchAll().then(()=>{scheduleRefresh();});
-}
-
-function scheduleRefresh(){
-  clearTimeout(refreshTimer);
-  refreshTimer=setTimeout(()=>{fetchAll().then(scheduleRefresh);},60000);
-}
-
-// INIT
-renderTabs();
-renderContent();
-updateStatusBar();
-fetchAll().then(scheduleRefresh);
-
-// Close modals on backdrop click
-document.getElementById('alert-modal').addEventListener('click',function(e){if(e.target===this)closeAlertModal();});
-document.getElementById('compare-modal').addEventListener('click',function(e){if(e.target===this)closeCompare();});
+document.addEventListener('DOMContentLoaded',()=>{
+  document.body.classList.toggle('light',!darkMode);
+  document.getElementById('darkbtn').textContent=darkMode?'☀ 亮色':'🌙 暗色';
+  buildTabs();switchTab('overview');fetchAll();
+  setInterval(fetchAll,60000);
+  if(typeof Notification!=='undefined'&&Notification.permission==='default')Notification.requestPermission();
+});
 </script>
-
-<footer>數據來源：Yahoo Finance ｜ 自動每 60 秒更新 ｜ 僅供參考，非投資建議 ｜ Built with Nebula AI</footer>
 </body>
 </html>
