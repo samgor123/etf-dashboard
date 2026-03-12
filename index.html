@@ -669,7 +669,7 @@ async function init() {
     loadedCount = preloadedCount;
     totalToLoad = preloadedCount;
     updateStatusBar();
-    renderAll();
+    renderContent();
     const ts = PRELOADED_DATA.timestamp;
     const preloadDate = new Date(ts * 1000);
     document.getElementById('lastUpdate').textContent = 
